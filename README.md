@@ -17,4 +17,4 @@ Functions are as follows:
  
  The work flow is explained by the following images:
  
- ![Pull new image](https://drive.google.com/drive/folders/1b1hUtqhfPpZXVzfOtXRDlKd1Hgb1xeAQ)
+ ![Pull new image](https://drive.google.com/file/d/1qeLnSb7CJ7etHoCs1QhXvjL7o9rfFS2V/view?usp=sharing)
