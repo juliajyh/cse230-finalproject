@@ -17,4 +17,4 @@ Functions are as follows:
  
  The work flow is explained by the following images:
  
- ![Pull new image](https://drive.google.com/file/d/1qeLnSb7CJ7etHoCs1QhXvjL7o9rfFS2V/view?usp=sharing)
+ ![Pull new image](https://github.com/juliajyh/cse230-finalproject/blob/main/requirements/Screen%20Shot%202021-11-11%20at%2010.49.08%20AM.png)
