@@ -2,6 +2,8 @@
 
 ## A User Interface allowing operations on Docker Components
 
+Members(github usernames): hcyang99, juliajyh
+
 Idea originates from https://github.com/skanehira/docui with an implementation by Go.
 
 Functions are as follows:
