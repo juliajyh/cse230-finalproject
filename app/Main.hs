@@ -29,29 +29,80 @@ data Name = TOP
           | BOTTOM
           deriving (Ord, Show, Eq)
 
+data Block t n =
+          { listContent :: L.List () [String]
+           -- ^ The contents of the editor
+           , name :: n
+           -- ^ The name of the editor
+           }
+
+suffixLenses ''Block
+
+instance (Show t, Show n) => Show (Block t n) where
+    show e =
+        concat [ "Block { "
+               , "Contents = " <> show (listContent e)
+               , ", Name = " <> show (name e)
+               , "}"
+               ]
+
+instance Named (Block t n) n where
+    getName = name
+
 data St =
     St { _focusRing :: F.FocusRing Name
-       ,_topList :: L.List Name [String]
-       , _bottomList :: L.List Name [String]
+       ,_topList :: Block (L.List () [String]) TOP
+       , _bottomList :: Block (L.List () [String]) BOTTOM
        }
 
 makeLenses ''St
 
 -- e1 = F.withFocusRing (st^.focusRing) (E.renderEditor (str . unlines)) (st^.edit1)
---         e2 = F.withFocusRing (st^.focusRing) (E.renderEditor (str . unlines)) (st^.edit2)
+
+renderBlock :: (Ord n, Show n) => (n -> Widget n) -> Bool -> Block t n -> Widget ()
+renderBlock draw foc e = L.renderList (listContent e)
+
+renderEditor :: (Ord n, Show n, Monoid t, TextWidth t, Z.GenericTextZipper t)
+             => ([t] -> Widget n)
+             -- ^ The content drawing function
+             -> Bool
+             -- ^ Whether the editor has focus. It will report a cursor
+             -- position if and only if it has focus.
+             -> Editor t n
+             -- ^ The editor.
+             -> Widget n
+renderEditor draw foc e = 
+
+-- withFocusRing :: (Eq n, Named a n)
+--               => FocusRing n
+--               -- ^ The focus ring to use as the source of focus state.
+--               -> (Bool -> a -> b)
+--               -- ^ A function that takes a value and its focus state.
+--               -> a
+--               -- ^ The widget state value that we need to check for focus.
+--               -> b
+--               -- ^ The rest of the computation.
+-- withFocusRing ring f a = f (focusGetCurrent ring == Just (getName a)) a
+
 
 drawUI :: St -> [Widget ()]
 drawUI st = [ui]
     where
+        
+        list1 = let topl = st^.topList
+                in L.renderList True listDrawElement (listContent topl))
+        list2 = let bottl = st^.bottomList
+                in list2 = L.renderList True listDrawElement (listContent bottl))
         box1 = B.borderWithLabel (str "list1 ") $
               hLimit 20 $
               vLimit 20 $
-              F.withFocusRing (st^.focusRing) (L.renderList listDrawElement) (st^.topList)
+              F.withFocusRing (st^.focusRing) (Block list1) (st^.topList)
 
         box2 = B.borderWithLabel (str "list2 ") $
-              hLimit 90 $
-              vLimit 50 $
-              F.withFocusRing (st^.focusRing) (L.renderList listDrawElement) (st^.bottomList)
+              hLimit 20 $
+              vLimit 20 $
+              F.withFocusRing (st^.focusRing) (Block list2) (st^.bottomList)
+
         ui = C.vCenter $ vBox [ C.hCenter box1
                               , C.hCenter box2
                               ]
@@ -101,6 +152,7 @@ appEvent st (T.VtyEvent e) =
       
       nextElementBottom :: Vec.Vector [String] -> [String]
       nextElementBottom v = fromMaybe ["?", "??", "???"] $ Vec.find (flip Vec.notElem v) (Vec.fromList [["ID", "Name", "Port"], ["7655909", "hello-world", "8888"]])
+      
 
 
 appEvent st _ = M.continue st
@@ -115,8 +167,8 @@ listDrawElement sel a =
 
 initialState :: St
 initialState = St (F.focusRing [TOP, BOTTOM])
-                  (L.list TOP (Vec.fromList [["Name", "Images", "Containers"], ["hello-word", "backend", "mysql"]]) 1)
-                   (L.list BOTTOM (Vec.fromList [["ID", "Name", "Port"], ["7655909", "hello-world", "8888"]]) 1)   
+                  (Block (L.list () (Vec.fromList [["Name", "Images", "Containers"], ["hello-word", "backend", "mysql"]]) 1) TOP)
+                  (Block (L.list () (Vec.fromList [["ID", "Name", "Port"], ["7655909", "hello-world", "8888"]]) 1) BOTTOM)
 
 customAttr :: A.AttrName
 customAttr = L.listSelectedAttr <> "custom"
