@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE CPP #-}
-module Main where
+module MainMenu where
 
 import Control.Monad (void)
 import Data.Maybe (fromMaybe)
