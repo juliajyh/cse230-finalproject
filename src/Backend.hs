@@ -1,4 +1,4 @@
-module Backend(test, psCmd) where
+module Backend(test, psCmd, runCmd) where
 
 import System.Process
 import Text.JSON
@@ -8,25 +8,29 @@ import Text.JSON.Parsec (p_object)
 import Text.JSON.Types (JSString(JSONString))
 import GHC.IO.Exception (ExitCode(ExitSuccess, ExitFailure))
 
+-- testing
 test :: IO ()
-test = testRun
+test = runTest testPs
+
+runTest :: (Show a) => IO (Either String a) -> IO ()
+runTest f = do
+    s <- f
+    case s of
+      Left ex -> putStr ex
+      Right v -> putStr $ show v
 
 -- ps Command
 -- ("ID", "Names", "Image", "State", "Status", "Ports")
 psCmd :: IO (Either String [(String, String, String, String, String, String)])
 psCmd = do
-    j <- getJsonObj
+    j <- runDockerPs
     case j of
       Left ex -> return $ Left ex
       Right jsonObjs ->
           return $ Right $ map getPsEntry jsonObjs
 
-testPs :: IO ()
-testPs = do
-    s <- psCmd
-    case s of
-      Left ex -> putStr ex
-      Right v -> putStr $ show v
+testPs :: IO (Either String [(String, String, String, String, String, String)])
+testPs = psCmd
 
 getPsEntry :: [(String, JSValue)] -> (String, String, String, String, String, String)
 getPsEntry jsonObj =
@@ -40,48 +44,39 @@ getPsEntry jsonObj =
         ports = getEntry "Ports" jsonObj
 
 -- Shell: docker ps
-runDockerPs :: IO (Either String String)
+runDockerPs :: IO (Either String [[(String, JSValue)]])
 runDockerPs = do
-    (code, out, err) <- readProcessWithExitCode "docker" ["ps", "--no-trunc", "--format", "'{{json .}}'"] ""
-    case code of
-      ExitSuccess -> return $ Right out
-      ExitFailure n -> case parseFromString line err of
-        Left _ -> return $ Left ("Code " ++ show n)
-        Right s -> return $ Left ("Code " ++ show n ++ ": " ++ s)
+    j <- execShell "docker" ["ps", "--no-trunc", "--format", "'{{json .}}'"]
+    case j of
+        Left ex -> return $ Left ex
+        Right jsonStr -> return $ parseJson jsonStr
 
 
 -- run Command
--- (Image, Name, [(Host_Path, Guest_Path)], [(Host_Port, Guest_Port)], Command, Attach, Volatile])
-runCmd :: (String, Maybe String, [(String, String)], [(String, String)], String, Bool, Bool) -> IO (Either String String)
-runCmd args@(img, name, mounts, ports, cmd, attach, volatile) = do
-    (code, out, err) <- readProcessWithExitCode "docker" ("run" : runArgs args) ""
-    case code of
-      ExitSuccess -> return $ Right out
-      ExitFailure n -> case parseFromString line err of
-        Left _ -> return $ Left ("Code " ++ show n)
-        Right s -> return $ Left ("Code " ++ show n ++ ": " ++ s)
+-- (Image, Name, [(Host_Path, Guest_Path)], [(Host_Port, Guest_Port)], Command, Attach, Volatile, Daemon])
+runCmd :: (String, String, [(String, String)], [(String, String)], String, Bool, Bool, Bool) -> IO (Either String String)
+runCmd args = execShell "docker" ("run" : runArgs args)
 
-testRun :: IO ()
-testRun = do 
-    s <- runCmd ("hcyang99/snps16", Just "cad", [("/home/hcyang/Documents/source/repos/patternet", "/mnt/repos/patternet"), ("/home/hcyang/Documents/source/env/snps16/.vscode-server/", "/root/.vscode-server")], [("80", "80"), ("443", "443")], "uname -r", False, True)
-    case s of
-      Left ex -> putStr ex
-      Right v -> putStr $ show v
 
-runArgs :: (String, Maybe String, [(String, String)], [(String, String)], String, Bool, Bool) -> [String]
-runArgs (img, name, mounts, ports, cmd, attach, volatile) =
-    runAttachArgs attach ++ runVolatileArgs volatile ++ runNameArgs name ++ runPathsArgs mounts ++ runPortsArgs ports ++ [img] ++ commands
+testRun :: IO (Either String String)
+testRun =
+    runCmd ("hcyang99/snps16", "cad", [("/home/hcyang/Documents/source/repos/patternet", "/mnt/repos/patternet"), ("/home/hcyang/Documents/source/env/snps16/.vscode-server/", "/root/.vscode-server")], [("80", "80"), ("443", "443")], "uname -r", False, True, False)
+    -- runCmd ("ubuntu", "frp", [("/home/hcyang/Documents/source/env/frp/", "/mnt/")], [("35600", "35600"), ("35622", "35622")], "/mnt/frps -c /mnt/frps.ini", False, True, True)
+
+
+runArgs :: (String, String, [(String, String)], [(String, String)], String, Bool, Bool, Bool) -> [String]
+runArgs (img, name, mounts, ports, cmd, attach, volatile, daemon) =
+    runAttachArgs attach ++ runDaemonArgs daemon ++ runVolatileArgs volatile ++ runNameArgs name ++ runPathsArgs mounts ++ runPortsArgs ports ++ [img] ++ commands
     where
         commands = case parseFromString Backend.words cmd of
           Left _ -> []
           Right ss -> ss
 
 
-runNameArgs :: Maybe String -> [String]
-runNameArgs s =
-    case s of
-        Nothing -> []
-        Just name -> ["--name", name]
+runNameArgs :: String -> [String]
+runNameArgs s
+    | length s == 0 = []
+    | otherwise = ["--name", s]
 
 -- [(Host_Path, Guest_Path)]
 runPathsArgs :: [(String, String)] -> [String]
@@ -102,6 +97,14 @@ runAttachArgs p = ["-it" | p]
 
 runVolatileArgs :: Bool -> [String]
 runVolatileArgs p = ["--rm" | p]
+
+runDaemonArgs :: Bool -> [String]
+runDaemonArgs p = ["-d" | p]
+
+-- stop Command
+stopCmd :: String -> IO (Either String String)
+stopCmd name = execShell "docker" ["stop", name]
+
 
 
 -- Parser Related
@@ -158,16 +161,12 @@ psParser = do
 
 -- JSON Related
 
-getJsonObj :: IO (Either String [[(String, JSValue)]])
-getJsonObj = do
-    encoded <- runDockerPs
-    case encoded of
-      Left ex -> return $ Left ex
-      Right jsonStr ->
-        case parseFromString psParser jsonStr of
-            Left _ -> undefined
-            Right jsonObj -> do
-                return $ Right jsonObj
+parseJson :: String -> Either String [[(String, JSValue)]]
+parseJson jsonStr =
+    case parseFromString psParser jsonStr of
+        Left _ -> undefined
+        Right jsonObj -> Right jsonObj
+
 
 getEntry :: String -> [(String, JSValue)] -> String
 getEntry n l =
@@ -178,10 +177,12 @@ getEntry n l =
                 JSString (JSONString s) -> s
                 _ -> undefined
 
-getEntries :: String -> [[(String, JSValue)]] -> [String]
-getEntries name = map (getEntry name)
-
-
-
-getNames :: [[(String, JSValue)]] -> [String]
-getNames = map (getEntry "Names")
+-- Shell
+execShell :: String -> [String] -> IO (Either String String)
+execShell file args = do
+    (code, out, err) <- readProcessWithExitCode file args ""
+    case code of
+      ExitSuccess -> return $ Right out
+      ExitFailure n -> case parseFromString line err of
+        Left _ -> return $ Left ("Code " ++ show n)
+        Right s -> return $ Left ("Code " ++ show n ++ ": " ++ s)
