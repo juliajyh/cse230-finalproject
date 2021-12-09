@@ -1,4 +1,4 @@
-module Backend(test, psCmd, runCmd) where
+module Backend(test, psCmd, runCmd, stopCmd, containerRmCmd, pullCmd, imageRmCmd, execCmd, imageLsCmd, volumeLsCmd, networkLsCmd) where
 
 import System.Process
 import Text.JSON
@@ -10,13 +10,13 @@ import GHC.IO.Exception (ExitCode(ExitSuccess, ExitFailure))
 
 -- testing
 test :: IO ()
-test = runTest testPs
+test = runTest testNetworkLs
 
 runTest :: (Show a) => IO (Either String a) -> IO ()
 runTest f = do
     s <- f
     case s of
-      Left ex -> putStr ex
+      Left ex -> putStr $ show ex
       Right v -> putStr $ show v
 
 -- ps Command
@@ -46,7 +46,7 @@ getPsEntry jsonObj =
 -- Shell: docker ps
 runDockerPs :: IO (Either String [[(String, JSValue)]])
 runDockerPs = do
-    j <- execShell "docker" ["ps", "--no-trunc", "--format", "'{{json .}}'"]
+    j <- execShell "docker" ["ps", "--no-trunc", "-a", "--format", "'{{json .}}'"]
     case j of
         Left ex -> return $ Left ex
         Right jsonStr -> return $ parseJson jsonStr
@@ -105,7 +105,129 @@ runDaemonArgs p = ["-d" | p]
 stopCmd :: String -> IO (Either String String)
 stopCmd name = execShell "docker" ["stop", name]
 
+testStop :: IO (Either String String)
+testStop = stopCmd "frp"
 
+-- container rm Command
+containerRmCmd :: String -> IO (Either String String)
+containerRmCmd name = execShell "docker" ["rm", name]
+
+testContainerRm :: IO (Either String String)
+testContainerRm = containerRmCmd "u20"
+
+-- pull Command
+pullCmd :: String -> IO (Either String String)
+pullCmd name = execShell "docker" ["pull", name]
+
+testPull :: IO (Either String String)
+testPull = pullCmd "fedora"
+
+-- image rm Command
+imageRmCmd :: String -> IO (Either String String)
+imageRmCmd name = execShell "docker" ["image", "rm", name]
+
+testImageRm :: IO (Either String String)
+testImageRm = imageRmCmd "fedora"
+
+-- exec Command
+execCmd :: String -> String -> IO (Either String String)
+execCmd name cmd = execShell "docker" (["exec", name] ++ commands)
+    where 
+        commands = case parseFromString Backend.words cmd of
+          Left _ -> []
+          Right ss -> ss
+
+testExec :: IO (Either String String)
+testExec = execCmd "pl" "uname -r"
+
+-- image ls Command
+-- (ID, Repo, Tag, Created, Size)
+imageLsCmd :: IO (Either String [(String, String, String, String, String)])
+imageLsCmd = do 
+    j <- runDockerImageLs
+    case j of 
+        Left ex -> return $ Left ex
+        Right jsonObjs ->
+            return $ Right $ map getImageLsEntry jsonObjs
+
+runDockerImageLs :: IO (Either String [[(String, JSValue)]])
+runDockerImageLs = do 
+    j <- execShell "docker" ["image", "ls", "-a", "--format", "'{{json .}}'"]
+    case j of
+        Left ex -> return $ Left ex
+        Right jsonStr -> return $ parseJson jsonStr
+
+getImageLsEntry :: [(String, JSValue)] -> (String, String, String, String, String)
+getImageLsEntry jsonObj = 
+    (id, repo, tag, created, size)
+    where 
+        id = getEntry "ID" jsonObj
+        repo = getEntry "Repository" jsonObj
+        tag = getEntry "Tag" jsonObj
+        created = getEntry "CreatedSince" jsonObj
+        size = getEntry "Size" jsonObj
+
+testImageLs :: IO (Either String [(String, String, String, String, String)])
+testImageLs = imageLsCmd
+
+-- volume ls Command
+-- (Name, Mount_Point, Driver, Size)
+volumeLsCmd :: IO (Either String [(String, String, String, String)])
+volumeLsCmd = do 
+    j <- runDockerVolumeLs
+    case j of 
+        Left ex -> return $ Left ex
+        Right jsonObjs ->
+            return $ Right $ map getVolumeLsEntry jsonObjs
+
+runDockerVolumeLs :: IO (Either String [[(String, JSValue)]])
+runDockerVolumeLs = do 
+    j <- execShell "docker" ["volume", "ls", "--format", "'{{json .}}'"]
+    case j of
+        Left ex -> return $ Left ex
+        Right jsonStr -> return $ parseJson jsonStr
+
+getVolumeLsEntry :: [(String, JSValue)] -> (String, String, String, String)
+getVolumeLsEntry jsonObj = 
+    (name, mountPoint, driver, size)
+    where
+        name = getEntry "Name" jsonObj
+        mountPoint = getEntry "Mountpoint" jsonObj
+        driver = getEntry "Driver" jsonObj
+        size = getEntry "Size" jsonObj
+
+testVolumeLs :: IO (Either String [(String, String, String, String)])
+testVolumeLs = volumeLsCmd
+
+-- network ls Command
+-- (ID, Name, Driver, Scope, Created)
+networkLsCmd :: IO (Either String [(String, String, String, String, String)])
+networkLsCmd = do 
+    j <- runDockerNetworkLs
+    case j of 
+        Left ex -> return $ Left ex
+        Right jsonObjs ->
+            return $ Right $ map getNetworkLsEntry jsonObjs
+
+runDockerNetworkLs :: IO (Either String [[(String, JSValue)]])
+runDockerNetworkLs = do 
+    j <- execShell "docker" ["network", "ls", "--format", "'{{json .}}'"]
+    case j of
+        Left ex -> return $ Left ex
+        Right jsonStr -> return $ parseJson jsonStr
+
+getNetworkLsEntry :: [(String, JSValue)] -> (String, String, String, String, String)
+getNetworkLsEntry jsonObj = 
+    (id, name, driver, scope, created)
+    where 
+        id = getEntry "ID" jsonObj
+        name = getEntry "Name" jsonObj
+        driver = getEntry "Driver" jsonObj
+        scope = getEntry "Scope" jsonObj
+        created = getEntry "CreatedAt" jsonObj
+
+testNetworkLs :: IO (Either String [(String, String, String, String, String)])
+testNetworkLs = networkLsCmd
 
 -- Parser Related
 
