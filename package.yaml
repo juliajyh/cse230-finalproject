@@ -1,4 +1,4 @@
-name:                backend
+name:                docker-tui
 version:             0.1.0.0
 github:              "githubuser/backend"
 license:             BSD3
@@ -23,12 +23,15 @@ dependencies:
 - json
 - process
 - parsec
+- brick
+- vty
+- word-wrap
 
 library:
   source-dirs: src
 
 executables:
-  backend-exe:
+  docker-tui-exe:
     main:                Main.hs
     source-dirs:         app
     ghc-options:
@@ -36,10 +39,10 @@ executables:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - backend
+    - docker-tui
 
 tests:
-  backend-test:
+  docker-tui-test:
     main:                Spec.hs
     source-dirs:         test
     ghc-options:
@@ -47,4 +50,4 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - backend
+    - docker-tui

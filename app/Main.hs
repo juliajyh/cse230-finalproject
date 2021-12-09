@@ -1,4 +1,4 @@
-import Backend
+import TestBrickStates (testBrickStates)
 
 main :: IO ()
-main = test
+main = testBrickStates
