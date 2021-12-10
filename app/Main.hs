@@ -17,6 +17,7 @@ import Backend(test)
 import ExecStart (testExecStart)
 import ExecExec (testExecExec)
 import UIDockerStart (testUIDockerStart)
+import MainMenu(mainMenu)
 
 main :: IO ()
-main = testUIDockerStart
+main = mainMenu

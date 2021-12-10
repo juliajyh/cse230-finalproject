@@ -1,6 +1,6 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedStrings #-}
-module Main where
+module MainMenu where
 
 import Control.Monad (void)
 #if !(MIN_VERSION_base(4,11,0))
@@ -381,8 +381,8 @@ tupToNetworkList (l:ls) = ((l1:ls1), (l2:ls2), (l3:ls3), (l4:ls4), (l5:ls5))
 
 
 
-main :: IO ()
-main = do
+mainMenu :: IO ()
+mainMenu = do
   container <- pContainersCmd
   image <- pImagesCmd
   volume <- pVolumesCmd
