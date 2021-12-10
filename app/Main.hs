@@ -36,26 +36,50 @@ data Name = VP1
           | VP6
           deriving (Ord, Show, Eq)
 
+-- Container ls Command
+-- ("ID", "Names", "Image", "State", "Status", "Ports")
+-- volume ls Command
+-- (Name, Mount_Point, Driver, Size)
+-- network ls Command
+-- (ID, Name, Driver, Scope, Created)
+
+pContainersCmd :: IO ([String], [String], [String], [String], [String], [String])
+pContainersCmd = do
+    cmds <- genContainersCmd
+    case cmds of
+      Left _ -> return ([],[],[],[],[],[])
+      Right tuples -> return $ tupToList tuples
+
+genContainersCmd :: IO (Either String [(String, String, String, String, String, String)])
+genContainersCmd = return $ Right [("aa", "bb", "cc", "dd", "ee", "ff"), ("aaa", "bbb", "ccc", "ddd", "eee", "fff")]
+
+tupToList :: [(String, String, String, String, String, String)] -> ([String], [String], [String], [String], [String], [String])
+tupToList [] = ([],[],[],[],[],[])
+tupToList (l:ls) = ((l1:ls1), (l2:ls2), (l3:ls3), (l4:ls4), (l5:ls5), (l6:ls6))
+    where (l1, l2, l3, l4, l5, l6) = l
+          (ls1, ls2, ls3, ls4, ls5, ls6) = tupToList ls
+
 drawUi :: () -> [Widget Name]
 drawUi = const [ui]
     where
         ui = C.center $ B.border $ hLimit 60 $ vLimit 21 $
              vBox [str "up and down to scroll top left list", str "bcedf to scroll down other lists", str "BCDEF to scroll up other lists", imageslist, B.hBorder, containerslist ]
+        (l1, l2, l3, _, _, _) = pContainersCmd
 
         imageslist = vBox[ str "images", B.hBorder, hBox [ viewport VP1 Vertical $
                       vBox $ str "Names" :
                               str " ":
-                             (str <$> ["Name1", "Name2", "Name3", "Name4", "Name5", "Name6", "Name7", "Name8", "Name9"])
+                             (str <$> l1)
                     , B.vBorder
                     , viewport VP2 Vertical $
                       vBox $ str "IDS" :
                               str " ":
-                             (str <$> ["ID1", "ID2", "ID3", "ID4", "ID5", "ID6", "ID7", "ID8", "ID9"])
+                             (str <$> l2)
                     , B.vBorder
                     , viewport VP3 Vertical $
                       vBox $ str "ports" :
                               str " ":
-                             (str <$> ["port1", "port2", "port3", "port4", "port5", "port6", "port7", "port8", "port9"])
+                             (str <$> l3)
                     ]]
 
         containerslist = vBox[ str "containers", B.hBorder, hBox [ viewport VP4 Vertical $
