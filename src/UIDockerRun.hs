@@ -115,7 +115,7 @@ theMap = attrMap V.defAttr
 draw :: Form DockerRunInfo e Name -> [Widget Name]
 draw f = [C.vCenter $ C.hCenter form <=> C.hCenter help]
     where
-        form = B.border $ padTop (Pad 1) $ hLimit 80 $ renderForm f
+        form = B.borderWithLabel (str "Run Container") $ padTop (Pad 1) $ hLimit 80 $ renderForm f
         help = padTop (Pad 1) $ B.borderWithLabel (str "Help") body
         body = str $ "- Press <Enter> to continue; Press <Esc> to exit\n" <>
                      "- Mount Example 1:\n" <> 
