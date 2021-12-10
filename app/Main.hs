@@ -12,6 +12,11 @@ import UIDockerImageRm (testUIDockerImageRm)
 import UIDockerContainerRm (testUIDockerContainerRm)
 import UIDockerStop (testUIDockerStop)
 import UIDockerExec (testUIDockerExec)
+import ExecRun (testExecRun)
+import Backend(test)
+import ExecStart (testExecStart)
+import ExecExec (testExecExec)
+import UIDockerStart (testUIDockerStart)
 
 main :: IO ()
-main = testUIDockerExec
+main = testUIDockerStart

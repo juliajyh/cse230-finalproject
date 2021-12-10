@@ -1,4 +1,4 @@
-module Backend(test, psCmd, runCmd, stopCmd, containerRmCmd, pullCmd, imageRmCmd, execCmd, imageLsCmd, volumeLsCmd, networkLsCmd) where
+module Backend(test, psCmd, runCmd, stopCmd, startCmd, containerRmCmd, pullCmd, imageRmCmd, execCmd, imageLsCmd, volumeLsCmd, networkLsCmd) where
 
 import System.Process
 import Text.JSON
@@ -10,7 +10,7 @@ import GHC.IO.Exception (ExitCode(ExitSuccess, ExitFailure))
 
 -- testing
 test :: IO ()
-test = runTest testNetworkLs
+test = runTest testStart
 
 runTest :: (Show a) => IO (Either String a) -> IO ()
 runTest f = do
@@ -139,6 +139,13 @@ execCmd name cmd = execShell "docker" (["exec", name] ++ commands)
 
 testExec :: IO (Either String String)
 testExec = execCmd "pl" "uname -r"
+
+-- start Command 
+startCmd :: String -> IO (Either String String)
+startCmd name = execShell "docker" ["start", name]
+
+testStart :: IO (Either String String)
+testStart = startCmd "test"
 
 -- image ls Command
 -- (ID, Repo, Tag, Created, Size)

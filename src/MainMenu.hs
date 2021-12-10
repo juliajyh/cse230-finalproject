@@ -1,6 +1,6 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedStrings #-}
-module Main where
+module MainMenu where
 
 import Control.Monad (void)
 #if !(MIN_VERSION_base(4,11,0))
