@@ -40,7 +40,7 @@ drawUi :: () -> [Widget Name]
 drawUi = const [ui]
     where
         ui = C.center $ B.border $ hLimit 60 $ vLimit 21 $
-             vBox [ imageslist, B.hBorder, containerslist ]
+             vBox [str "up and down to scroll top left list", str "bcedf to scroll down other lists", str "BCDEF to scroll up other lists", imageslist, B.hBorder, containerslist ]
 
         imageslist = vBox[ str "images", B.hBorder, hBox [ viewport VP1 Vertical $
                       vBox $ str "Names" :
@@ -94,20 +94,21 @@ vp6Scroll :: M.ViewportScroll Name
 vp6Scroll = M.viewportScroll VP6
 
 appEvent :: () -> T.BrickEvent Name e -> T.EventM Name (T.Next ())
-appEvent _ (T.VtyEvent (V.EvKey V.KDown  [V.MCtrl])) = M.vScrollBy vp3Scroll 1 >> M.continue ()
-appEvent _ (T.VtyEvent (V.EvKey V.KUp    [V.MCtrl])) = M.vScrollBy vp3Scroll (-1) >> M.continue ()
 appEvent _ (T.VtyEvent (V.EvKey V.KRight [V.MCtrl])) = M.hScrollBy vp3Scroll 1 >> M.continue ()
 appEvent _ (T.VtyEvent (V.EvKey V.KLeft  [V.MCtrl])) = M.hScrollBy vp3Scroll (-1) >> M.continue ()
 appEvent _ (T.VtyEvent (V.EvKey V.KDown []))  = M.vScrollBy vp1Scroll 1 >> M.continue ()
 appEvent _ (T.VtyEvent (V.EvKey V.KUp []))    = M.vScrollBy vp1Scroll (-1) >> M.continue ()
-appEvent _ (T.VtyEvent (V.EvKey (V.KChar '1') [])) = M.vScrollBy vp2Scroll 1 >> M.continue ()
-appEvent _ (T.VtyEvent (V.EvKey (V.KChar '1') [V.MCtrl]))  = M.vScrollBy vp2Scroll (-1) >> M.continue ()
-appEvent _ (T.VtyEvent (V.EvKey (V.KChar '2') []))  = M.vScrollBy vp4Scroll 1 >> M.continue ()
-appEvent _ (T.VtyEvent (V.EvKey (V.KChar '2') [V.MCtrl]))    = M.vScrollBy vp4Scroll (-1) >> M.continue ()
-appEvent _ (T.VtyEvent (V.EvKey (V.KChar '3') [])) = M.vScrollBy vp5Scroll 1 >> M.continue ()
-appEvent _ (T.VtyEvent (V.EvKey (V.KChar '3') [V.MCtrl]))  = M.vScrollBy vp5Scroll (-1) >> M.continue ()
-appEvent _ (T.VtyEvent (V.EvKey (V.KChar '4') [])) = M.vScrollBy vp6Scroll 1 >> M.continue ()
-appEvent _ (T.VtyEvent (V.EvKey (V.KChar '4') [V.MCtrl]))  = M.vScrollBy vp6Scroll (-1) >> M.continue ()
+appEvent _ (T.VtyEvent (V.EvKey (V.KChar 'b') [])) = M.vScrollBy vp2Scroll 1 >> M.continue ()
+appEvent _ (T.VtyEvent (V.EvKey (V.KChar 'B') []))  = M.vScrollBy vp2Scroll (-1) >> M.continue ()
+
+appEvent _ (T.VtyEvent (V.EvKey (V.KChar 'c') [])) = M.vScrollBy vp3Scroll 1 >> M.continue ()
+appEvent _ (T.VtyEvent (V.EvKey (V.KChar 'C') [])) = M.vScrollBy vp3Scroll (-1) >> M.continue ()
+appEvent _ (T.VtyEvent (V.EvKey (V.KChar 'd') []))  = M.vScrollBy vp4Scroll 1 >> M.continue ()
+appEvent _ (T.VtyEvent (V.EvKey (V.KChar 'D') []))    = M.vScrollBy vp4Scroll (-1) >> M.continue ()
+appEvent _ (T.VtyEvent (V.EvKey (V.KChar 'e') [])) = M.vScrollBy vp5Scroll 1 >> M.continue ()
+appEvent _ (T.VtyEvent (V.EvKey (V.KChar 'E') []))  = M.vScrollBy vp5Scroll (-1) >> M.continue ()
+appEvent _ (T.VtyEvent (V.EvKey (V.KChar 'f') [])) = M.vScrollBy vp6Scroll 1 >> M.continue ()
+appEvent _ (T.VtyEvent (V.EvKey (V.KChar 'F') []))  = M.vScrollBy vp6Scroll (-1) >> M.continue ()
 
 appEvent _ (T.VtyEvent (V.EvKey V.KEsc [])) = M.halt ()
 appEvent _ _ = M.continue ()
