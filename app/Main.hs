@@ -6,6 +6,7 @@ import ExecStop (testExecStop)
 import ExecContainerRm (testExecContainerRm)
 import ExecImageRm (testExecImageRm)
 import ResultDialog(testResultDialog)
+import UIDockerRun(testUIDockerRun)
 
 main :: IO ()
-main = testExecPull 
+main = testUIDockerRun
