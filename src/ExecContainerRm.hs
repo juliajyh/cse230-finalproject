@@ -16,6 +16,7 @@ import Brick.Util (on, fg)
 import Brick.AttrMap (AttrName)
 import Backend(containerRmCmd)
 import Control.Monad.IO.Class (MonadIO(liftIO))
+import ResultDialog (resultDialog)
 
 theme1 :: Theme
 theme1 = newTheme (V.white `on` V.blue) []
@@ -60,4 +61,4 @@ execContainerRm = M.defaultMain app "fedora"
 testExecContainerRm :: IO ()
 testExecContainerRm = do
     s <- execContainerRm
-    print s
+    resultDialog "Remove Container" s

@@ -16,6 +16,7 @@ import Brick.Util (on, fg)
 import Brick.AttrMap (AttrName)
 import Backend(pullCmd)
 import Control.Monad.IO.Class (MonadIO(liftIO))
+import ResultDialog (resultDialog)
 
 theme1 :: Theme
 theme1 = newTheme (V.white `on` V.blue) []
@@ -60,4 +61,4 @@ execPull = M.defaultMain app "fedora"
 testExecPull :: IO ()
 testExecPull = do
     s <- execPull
-    print s
+    resultDialog "Pull Image" s

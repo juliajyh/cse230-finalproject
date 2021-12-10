@@ -5,6 +5,7 @@ import ExecPull(testExecPull)
 import ExecStop (testExecStop)
 import ExecContainerRm (testExecContainerRm)
 import ExecImageRm (testExecImageRm)
+import ResultDialog(testResultDialog)
 
 main :: IO ()
-main = testExecImageRm
+main = testExecPull 
