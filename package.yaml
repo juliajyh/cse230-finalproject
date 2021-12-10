@@ -26,6 +26,10 @@ dependencies:
 - brick
 - vty
 - word-wrap
+- vector
+- microlens
+- microlens-th
+- text
 
 library:
   source-dirs: src
