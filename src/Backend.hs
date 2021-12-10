@@ -36,10 +36,10 @@ import Text.JSON.Types (JSString(JSONString))
 import GHC.IO.Exception (ExitCode(ExitSuccess, ExitFailure))
 
 -- type aliases
-type ContainerLsInfo = Either String [(String, String, String, String, String, String)]
-type ImageLsInfo = Either String [(String, String, String, String, String)]
-type VolumeLsInfo = Either String [(String, String, String, String)]
-type NetworkLsInfo = Either String [(String, String, String, String, String)]
+type ContainerLsInfo = [(String, String, String, String, String, String)]
+type ImageLsInfo = [(String, String, String, String, String)]
+type VolumeLsInfo = [(String, String, String, String)]
+type NetworkLsInfo = [(String, String, String, String, String)]
 data Command = 
     DockerMain | DockerImagePull | DockerImageRm | DockerRun | DockerRm | DockerExec | DockerStart | DockerStop | DockerHalt
     deriving (Show)
@@ -57,7 +57,7 @@ runTest f = do
 
 -- ps Command
 -- ("ID", "Names", "Image", "State", "Status", "Ports")
-psCmd :: IO ContainerLsInfo
+psCmd :: IO (Either String ContainerLsInfo)
 psCmd = do
     j <- runDockerPs
     case j of
@@ -185,7 +185,7 @@ testStart = startCmd "test"
 
 -- image ls Command
 -- (ID, Repo, Tag, Created, Size)
-imageLsCmd :: IO (Either String [(String, String, String, String, String)])
+imageLsCmd :: IO (Either String ImageLsInfo)
 imageLsCmd = do 
     j <- runDockerImageLs
     case j of 
@@ -210,12 +210,12 @@ getImageLsEntry jsonObj =
         created = getEntry "CreatedSince" jsonObj
         size = getEntry "Size" jsonObj
 
-testImageLs :: IO ImageLsInfo
+testImageLs :: IO (Either String ImageLsInfo)
 testImageLs = imageLsCmd
 
 -- volume ls Command
 -- (Name, Mount_Point, Driver, Size)
-volumeLsCmd :: IO VolumeLsInfo
+volumeLsCmd :: IO (Either String VolumeLsInfo)
 volumeLsCmd = do 
     j <- runDockerVolumeLs
     case j of 
@@ -244,7 +244,7 @@ testVolumeLs = volumeLsCmd
 
 -- network ls Command
 -- (ID, Name, Driver, Scope, Created)
-networkLsCmd :: IO NetworkLsInfo
+networkLsCmd :: IO (Either String NetworkLsInfo)
 networkLsCmd = do 
     j <- runDockerNetworkLs
     case j of 
