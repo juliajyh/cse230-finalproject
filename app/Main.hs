@@ -8,9 +8,9 @@ import UIDockerRun(uiDockerRun)
 import qualified UIDockerPull (uiDockerPull, DockerImageInfo, initialDockerImageInfo, getImage, getCancel)
 import qualified UIDockerImageRm (uiDockerImageRm, DockerImageInfo, initialDockerImageInfo, getImage, getCancel)
 import qualified UIDockerContainerRm (uiDockerContainerRm, initialDockerContainerInfo, DockerContainerInfo, getContainer, getCancel)
-import UIDockerStop (uiDockerStop)
-import UIDockerExec (uiDockerExec)
-import UIDockerStart (uiDockerStart)
+import qualified UIDockerStop (uiDockerStop, initialDockerContainerInfo, DockerContainerInfo, getContainer, getCancel)
+import qualified UIDockerExec (uiDockerExec, initialDockerExecInfo, DockerExecInfo, getContainer, getCommand, getCancel)
+import qualified UIDockerStart (uiDockerStart, initialDockerContainerInfo, DockerContainerInfo, getContainer, getCancel)
 import ExecRun (execRun)
 import ExecStart (execStart)
 import ExecExec (execExec)
@@ -38,11 +38,11 @@ runMainMenu = do
                 DockerMain -> runMainMenu
                 DockerImagePull -> runDockerImagePull UIDockerPull.initialDockerImageInfo
                 DockerImageRm  -> runDockerImageRm UIDockerImageRm.initialDockerImageInfo
-                DockerRun -> runDockerRun
+                DockerRun -> runDockerRun 
                 DockerRm -> runDockerRm UIDockerContainerRm.initialDockerContainerInfo
-                DockerExec -> runDockerExec
-                DockerStart -> runDockerStart
-                DockerStop -> runDockerStop
+                DockerExec -> runDockerExec UIDockerExec.initialDockerExecInfo
+                DockerStart -> runDockerStart UIDockerStart.initialDockerContainerInfo
+                DockerStop -> runDockerStop UIDockerStop.initialDockerContainerInfo
                 DockerHalt -> return ()
 
 runDockerImagePull :: UIDockerPull.DockerImageInfo -> IO ()
@@ -81,14 +81,41 @@ runDockerRm oldInfo = do
             resultDialog "Remove Container" res 
             runMainMenu
 
-runDockerExec :: IO ()
-runDockerExec = undefined 
+runDockerExec :: UIDockerExec.DockerExecInfo -> IO ()
+runDockerExec oldInfo = do 
+    newInfo <- UIDockerExec.uiDockerExec oldInfo 
+    case UIDockerExec.getCancel newInfo of 
+        True -> do 
+            resultDialog "Execute Command" "Cancelled"
+            runMainMenu
+        False -> do 
+            res <- execExec (unpack $ UIDockerExec.getContainer newInfo) (unpack $ UIDockerExec.getCommand newInfo)
+            resultDialog "Execute Command" res 
+            runMainMenu
 
-runDockerStart :: IO ()
-runDockerStart = undefined
+runDockerStart :: UIDockerStart.DockerContainerInfo -> IO ()
+runDockerStart oldInfo = do 
+    newInfo <- UIDockerStart.uiDockerStart oldInfo 
+    case UIDockerStart.getCancel newInfo of 
+        True -> do 
+            resultDialog "Start Container" "Cancelled"
+            runMainMenu
+        False -> do 
+            res <- execStart $ unpack $ UIDockerStart.getContainer newInfo
+            resultDialog "Start Container" res 
+            runMainMenu
 
-runDockerStop :: IO ()
-runDockerStop = undefined 
+runDockerStop :: UIDockerStop.DockerContainerInfo -> IO ()
+runDockerStop oldInfo = do 
+    newInfo <- UIDockerStop.uiDockerStop oldInfo 
+    case UIDockerStop.getCancel newInfo of 
+        True -> do 
+            resultDialog "Stop Container" "Cancelled"
+            runMainMenu
+        False -> do 
+            res <- execStop $ unpack $ UIDockerStop.getContainer newInfo 
+            resultDialog "Stop Container" res 
+            runMainMenu
 
 runDockerRun :: IO ()
 runDockerRun = undefined 

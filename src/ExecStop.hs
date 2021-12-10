@@ -54,10 +54,10 @@ app =
           , M.appAttrMap = \_ -> themeToAttrMap theme1
           }
 
-execStop :: IO String 
-execStop = M.defaultMain app "fedora"
+execStop :: String -> IO String 
+execStop = M.defaultMain app 
 
 testExecStop :: IO ()
 testExecStop = do
-    s <- execStop
+    s <- execStop "fedora"
     print s

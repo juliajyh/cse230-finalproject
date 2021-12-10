@@ -1,7 +1,14 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverloadedStrings #-}
-module UIDockerExec(testUIDockerExec, uiDockerExec, initialDockerExecInfo, DockerExecInfo) where
+module UIDockerExec(
+  testUIDockerExec, 
+  uiDockerExec, 
+  initialDockerExecInfo, 
+  DockerExecInfo,
+  getContainer,
+  getCommand,
+  getCancel) where
 
 import qualified Data.Text as T
 import Lens.Micro ((^.))
@@ -57,13 +64,22 @@ data Name = NameField | CommandField
           deriving (Eq, Ord, Show)
 
 data DockerExecInfo =
-    DockerExecInfo { _container    :: T.Text 
-                   ,_command      :: T.Text 
+    DockerExecInfo { _container    :: T.Text
+                   ,_command      :: T.Text
                    ,_cancel             :: Bool
              }
              deriving (Show)
 
 makeLenses ''DockerExecInfo
+
+getContainer :: DockerExecInfo -> T.Text
+getContainer = _container
+
+getCommand :: DockerExecInfo -> T.Text
+getCommand = _command
+
+getCancel :: DockerExecInfo -> Bool
+getCancel = _cancel
 
 -- This form is covered in the Brick User Guide; see the "Input Forms"
 -- section.
@@ -101,7 +117,7 @@ app =
                 VtyEvent (V.EvKey V.KEsc [])   -> halt $ mkForm (formState s){_cancel = True}
                 -- Enter quits only when we aren't in the multi-line editor.
                 VtyEvent (V.EvKey V.KEnter []) -> halt $ mkForm (formState s){_cancel = False }
-                _ -> do 
+                _ -> do
                     s' <- handleFormEvent ev s
                     continue s'
 
@@ -126,7 +142,7 @@ uiDockerExec oldInfo = do
 
         f = mkForm oldInfo
 
-    initialVty <- buildVty 
+    initialVty <- buildVty
     f' <- customMain initialVty buildVty Nothing app f
     return $ formState f'
 

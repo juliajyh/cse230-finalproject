@@ -1,7 +1,13 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverloadedStrings #-}
-module UIDockerStop(testUIDockerStop, uiDockerStop, initialDockerContainerInfo, DockerContainerInfo) where
+module UIDockerStop(
+  testUIDockerStop, 
+  uiDockerStop, 
+  initialDockerContainerInfo, 
+  DockerContainerInfo,
+  getContainer,
+  getCancel) where
 
 import qualified Data.Text as T
 import Lens.Micro ((^.))
@@ -63,6 +69,12 @@ data DockerContainerInfo =
              deriving (Show)
 
 makeLenses ''DockerContainerInfo
+
+getContainer :: DockerContainerInfo -> T.Text
+getContainer = _container
+
+getCancel :: DockerContainerInfo -> Bool
+getCancel = _cancel
 
 -- This form is covered in the Brick User Guide; see the "Input Forms"
 -- section.

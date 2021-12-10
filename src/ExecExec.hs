@@ -56,10 +56,10 @@ getApp name command =
           , M.appAttrMap = \_ -> themeToAttrMap theme1
           }
 
-execExec :: IO String 
-execExec = M.defaultMain (getApp "pl" "uname -r") ""
+execExec :: String -> String -> IO String 
+execExec name command = M.defaultMain (getApp name command) ""
 
 testExecExec :: IO ()
 testExecExec = do
-    s <- execExec
+    s <- execExec "pl" "uname -r"
     resultDialog "Run Command" s
