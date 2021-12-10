@@ -1,4 +1,4 @@
-module ExecPull(execPull, testExecPull) where
+module ExecStop(execStop, testExecStop) where
 
 import Control.Monad(void)
 import qualified Graphics.Vty as V
@@ -14,7 +14,7 @@ import Brick.Themes
   )
 import Brick.Util (on, fg)
 import Brick.AttrMap (AttrName)
-import Backend(pullCmd)
+import Backend(stopCmd)
 import Control.Monad.IO.Class (MonadIO(liftIO))
 
 theme1 :: Theme
@@ -25,7 +25,7 @@ drawUI name = [ui]
     where
         ui = center $ hLimit 60 $ vBox $ hCenter <$>
             [
-                str $ "Pull image \"" ++ name ++ "\"?",
+                str $ "Stop container \"" ++ name ++ "\"?",
                 str " ",
                 str "Press <Enter> to continue; Press <Esc> to cancel",
                 str " ",
@@ -37,10 +37,10 @@ appEvent s (T.VtyEvent ev) =
     case ev of
         V.EvKey V.KEsc [] -> M.halt "Cancelled"
         V.EvKey V.KEnter [] -> do 
-            val <- liftIO $ pullCmd s
+            val <- liftIO $ stopCmd s
             case val of
                 Left ex -> M.halt ex
-                Right res -> M.halt $ "Successfully pulled image \"" ++ s ++ "\n"
+                Right res -> M.halt $ "Successfully stopped container \"" ++ s ++ "\n"
         _ -> M.continue s
 appEvent s _ = M.continue s
 
@@ -54,10 +54,10 @@ app =
           , M.appAttrMap = \_ -> themeToAttrMap theme1
           }
 
-execPull :: IO String 
-execPull = M.defaultMain app "fedora"
+execStop :: IO String 
+execStop = M.defaultMain app "fedora"
 
-testExecPull :: IO ()
-testExecPull = do
-    s <- execPull
+testExecStop :: IO ()
+testExecStop = do
+    s <- execStop
     print s
