@@ -1,7 +1,7 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverloadedStrings #-}
-module UIDockerRun(testUIDockerRun, uiDockerRun) where
+module UIDockerRun(testUIDockerRun, uiDockerRun, initialDockerRunInfo, DockerRunInfo) where
 
 import qualified Data.Text as T
 import Lens.Micro ((^.))
@@ -63,8 +63,8 @@ data Name = ImageField
           | DaemonField
           deriving (Eq, Ord, Show)
 
-data UserInfo =
-    UserInfo { _image       :: T.Text 
+data DockerRunInfo =
+    DockerRunInfo { _image       :: T.Text 
              , _name        :: T.Text 
              , _mounts      :: T.Text 
              , _ports       :: T.Text 
@@ -76,11 +76,11 @@ data UserInfo =
              }
              deriving (Show)
 
-makeLenses ''UserInfo
+makeLenses ''DockerRunInfo
 
 -- This form is covered in the Brick User Guide; see the "Input Forms"
 -- section.
-mkForm :: UserInfo -> Form UserInfo e Name
+mkForm :: DockerRunInfo -> Form DockerRunInfo e Name
 mkForm =
     let label s w = padBottom (Pad 1) $
                     (vLimit 1 $ hLimit 15 $ str s <+> fill ' ') <+> w
@@ -112,20 +112,23 @@ theMap = attrMap V.defAttr
   , (focusedFormInputAttr, V.white `on` V.blue)
   ]
 
-draw :: Form UserInfo e Name -> [Widget Name]
+draw :: Form DockerRunInfo e Name -> [Widget Name]
 draw f = [C.vCenter $ C.hCenter form <=> C.hCenter help]
     where
         form = B.border $ padTop (Pad 1) $ hLimit 80 $ renderForm f
         help = padTop (Pad 1) $ B.borderWithLabel (str "Help") body
-        body = str $ "- Name is free-form text\n" <>
-                     "- Age must be an integer (try entering an\n" <>
-                     "  invalid age!)\n" <>
-                     "- Handedness selects from a list of options\n" <>
-                     "- The last option is a checkbox\n" <>
-                     "- Enter/Esc quit, mouse interacts with fields"
+        body = str $ "- Press <Enter> to continue; Press <Esc> to exit\n" <>
+                     "- Mount Example 1:\n" <> 
+                     "      /home/user/host-dir:/mnt/guest-dir; /home/user/dir2:/mnt/dir2 \n" <>
+                     "      /home/user/dir3:/mnt/dir3\n" <>
+                     "- Mount Example 2:\n" <>
+                     "      /home/user/host-dir:/mnt/guest-dir\n" <>
+                     "      /home/user/dir2:/mnt/dir2\n" <>
+                     "- Ports Example 1: 80:80\n" <>
+                     "- Ports Example 2: 80:80, 443:443"
 
 
-app :: App (Form UserInfo e Name) e Name
+app :: App (Form DockerRunInfo e Name) e Name
 app =
     App { appDraw = draw
         , appHandleEvent = \s ev ->
@@ -134,7 +137,7 @@ app =
                 VtyEvent (V.EvKey V.KEsc [])   -> halt $ mkForm (formState s){_cancel = True}
                 -- Enter quits only when we aren't in the multi-line editor.
                 VtyEvent (V.EvKey V.KEnter [])
-                    | focusGetCurrent (formFocus s) /= Just MountField && focusGetCurrent (formFocus s) /= Just PortField -> 
+                    | focusGetCurrent (formFocus s) /= Just MountField -> 
                         halt $ mkForm (formState s){_cancel = False }
                 _ -> do 
                     s' <- handleFormEvent ev s
@@ -146,8 +149,8 @@ app =
         }
 
 
-initialUserInfo :: UserInfo
-initialUserInfo = UserInfo { _image = ""
+initialDockerRunInfo :: DockerRunInfo
+initialDockerRunInfo = DockerRunInfo { _image = ""
                             , _name = ""
                             , _mounts = ""
                             , _ports = ""
@@ -158,7 +161,7 @@ initialUserInfo = UserInfo { _image = ""
                             , _cancel = False
                             }
 
-uiDockerRun :: UserInfo -> IO UserInfo
+uiDockerRun :: DockerRunInfo -> IO DockerRunInfo
 uiDockerRun oldInfo = do
     let buildVty = do
           v <- V.mkVty =<< V.standardIOConfig
@@ -173,10 +176,10 @@ uiDockerRun oldInfo = do
 
 testUIDockerRun :: IO ()
 testUIDockerRun = do
-    newInfo <- uiDockerRun initialUserInfo
+    newInfo <- uiDockerRun initialDockerRunInfo
 
     putStrLn "The starting form state was:"
-    print initialUserInfo
+    print initialDockerRunInfo
 
     putStrLn "The final form state was:"
     print newInfo
