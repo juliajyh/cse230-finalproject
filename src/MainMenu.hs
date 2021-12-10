@@ -1,3 +1,5 @@
+
+   
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
@@ -66,7 +68,7 @@ type Network = ([String], [String], [String], [String], [String])
 getUI :: Image -> Container -> Volume -> Network -> () -> [Widget Name]
 getUI is cs vs ns = const [ui]
     where
-        ui = C.center $ B.border $ hLimit 90 $ vLimit 40 $
+        ui = C.center $ B.border $ hLimit 150 $ vLimit 40 $
              vBox [str "abcde to scroll down, ABCDE to scroll up", B.hBorder, imageslist, B.hBorder, str "fghijk to scroll down, FGHIJK to scroll up", B.hBorder, containerslist, B.hBorder, str "lmno to scroll down, LMNO to scroll up", B.hBorder, volumeslist, B.hBorder, str "pqrst to scroll down, PQRST to scroll up", B.hBorder, networklist]
         (il1, il2, il3, il4, il5) = is
         (cl1, cl2, cl3, cl4, cl5, cl6) = cs
@@ -309,13 +311,11 @@ app i c v n =
 -- handle image
 pImagesCmd :: IO Image
 pImagesCmd = do
-    cmds <- genImagesCmd
-    case cmds of
-      Left _ -> return ([],[],[],[],[])
-      Right tuples -> return $ tupToImagesList tuples
+    tuples <- genImagesCmd
+    return $ tupToImagesList tuples
 
-genImagesCmd :: IO (Either String [(String, String, String, String, String)])
-genImagesCmd = return $ Right [("aa", "bb", "cc", "dd", "ee"), ("aaa", "bbb", "ccc", "ddd", "eee"), ("aa", "bb", "cc", "dd", "ee"), ("aaa", "bbb", "ccc", "ddd", "eee")]
+genImagesCmd :: IO [(String, String, String, String, String)]
+genImagesCmd = return [("b78af7a83692","fedora","latest","11 days ago","153MB"),("ba6acccedd29","ubuntu","latest","7 weeks ago","72.8MB"),("d02e6b3a30c7","hcyang99/snps16","latest","2 months ago","15.1GB")]
 
 tupToImagesList :: [(String, String, String, String, String)] -> Image
 tupToImagesList [] = ([],[],[],[],[])
@@ -327,14 +327,13 @@ tupToImagesList (l:ls) = ((l1:ls1), (l2:ls2), (l3:ls3), (l4:ls4), (l5:ls5))
 -- handle container
 pContainersCmd :: IO Container
 pContainersCmd = do
-    cmds <- genContainersCmd
-    case cmds of
-      Left _ -> return ([],[],[],[],[],[])
-      Right tuples -> return $ tupToContainersList tuples
+    tuples <- genContainersCmd
+    return $ tupToContainersList tuples
 
 
-genContainersCmd :: IO (Either String [(String, String, String, String, String, String)])
-genContainersCmd = return $ Right [("aa", "bb", "cc", "dd", "ee", "ff"), ("aaa", "bbb", "ccc", "ddd", "eee", "fff"), ("aa", "bb", "cc", "dd", "ee", "ff"), ("aaa", "bbb", "ccc", "ddd", "eee", "fff")]
+genContainersCmd :: IO [(String, String, String, String, String, String)]
+genContainersCmd = return  [("71f74b582fc0","test","fedora","exited","Exited (0) 2 hours ago",""),("118032700ff4","frp","ubuntu","running","Up 41 hours","0.0.0.0:35600->35600/tcp, :::35600->35600/tcp, 0.0.0.0:35622->35622/tcp, :::35622->35622/tcp"),("74194839b992","pl","ubuntu","running","Up 2 days","")]
+
 
 tupToContainersList :: [(String, String, String, String, String, String)] -> Container
 tupToContainersList [] = ([],[],[],[],[],[])
@@ -346,13 +345,11 @@ tupToContainersList (l:ls) = ((l1:ls1), (l2:ls2), (l3:ls3), (l4:ls4), (l5:ls5), 
 -- handle volume
 pVolumesCmd :: IO Volume
 pVolumesCmd = do
-    cmds <- genVolumesCmd
-    case cmds of
-      Left _ -> return ([],[],[],[])
-      Right tuples -> return $ tupToVolumesList tuples
+    tuples <- genVolumesCmd
+    return $ tupToVolumesList tuples
 
-genVolumesCmd :: IO (Either String [(String, String, String, String)])
-genVolumesCmd = return $ Right [("aa", "bb", "cc", "dd"), ("aaa", "bbb", "ccc", "ddd"), ("aa", "bb", "cc", "dd"), ("aaa", "bbb", "ccc", "ddd")]
+genVolumesCmd :: IO [(String, String, String, String)]
+genVolumesCmd = return [("data","/var/lib/docker/volumes/data/_data","local","N/A")]
 
 tupToVolumesList :: [(String, String, String, String)] -> Volume
 tupToVolumesList [] = ([],[],[],[])
@@ -364,14 +361,12 @@ tupToVolumesList (l:ls) = ((l1:ls1), (l2:ls2), (l3:ls3), (l4:ls4))
 -- handle network
 pNetworkCmd :: IO Network
 pNetworkCmd = do
-    cmds <- genNetworkCmd
-    case cmds of
-      Left _ -> return ([],[],[],[],[])
-      Right tuples -> return $ tupToNetworkList tuples
+    tuples <- genNetworkCmd
+    return $ tupToNetworkList tuples
 
 
-genNetworkCmd :: IO (Either String [(String, String, String, String, String)])
-genNetworkCmd = return $ Right [("aa", "bb", "cc", "dd", "ee"), ("aaa", "bbb", "ccc", "ddd", "eee"), ("aa", "bb", "cc", "dd", "ee"), ("aaa", "bbb", "ccc", "ddd", "eee")]
+genNetworkCmd :: IO [(String, String, String, String, String)]
+genNetworkCmd = return [("60d0dc8d3108","bridge","bridge","local","2021-12-06 16:29:32.005620093 -0800 PST"),("9474ae3b0db9","host","host","local","2021-12-06 16:29:31.978428526 -0800 PST"),("1f6332bc0c50","none","null","local","2021-12-06 16:29:31.965261296 -0800 PST")]
 
 tupToNetworkList :: [(String, String, String, String, String)] -> Network
 tupToNetworkList [] = ([],[],[],[],[])
