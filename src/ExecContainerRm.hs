@@ -55,10 +55,10 @@ app =
           , M.appAttrMap = \_ -> themeToAttrMap theme1
           }
 
-execContainerRm :: IO String 
-execContainerRm = M.defaultMain app "fedora"
+execContainerRm :: String -> IO String 
+execContainerRm = M.defaultMain app 
 
 testExecContainerRm :: IO ()
 testExecContainerRm = do
-    s <- execContainerRm
+    s <- execContainerRm "fedora"
     resultDialog "Remove Container" s

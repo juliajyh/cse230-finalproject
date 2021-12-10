@@ -7,13 +7,13 @@ import ResultDialog(resultDialog)
 import UIDockerRun(uiDockerRun)
 import qualified UIDockerPull (uiDockerPull, DockerImageInfo, initialDockerImageInfo, getImage, getCancel)
 import qualified UIDockerImageRm (uiDockerImageRm, DockerImageInfo, initialDockerImageInfo, getImage, getCancel)
-import UIDockerContainerRm (uiDockerContainerRm)
+import qualified UIDockerContainerRm (uiDockerContainerRm, initialDockerContainerInfo, DockerContainerInfo, getContainer, getCancel)
 import UIDockerStop (uiDockerStop)
 import UIDockerExec (uiDockerExec)
+import UIDockerStart (uiDockerStart)
 import ExecRun (execRun)
 import ExecStart (execStart)
 import ExecExec (execExec)
-import UIDockerStart (uiDockerStart)
 import MainMenu(mainMenu)
 import Backend
 import Data.Text(unpack)
@@ -39,7 +39,7 @@ runMainMenu = do
                 DockerImagePull -> runDockerImagePull UIDockerPull.initialDockerImageInfo
                 DockerImageRm  -> runDockerImageRm UIDockerImageRm.initialDockerImageInfo
                 DockerRun -> runDockerRun
-                DockerRm -> runDockerRm
+                DockerRm -> runDockerRm UIDockerContainerRm.initialDockerContainerInfo
                 DockerExec -> runDockerExec
                 DockerStart -> runDockerStart
                 DockerStop -> runDockerStop
@@ -69,11 +69,17 @@ runDockerImageRm oldInfo = do
             resultDialog "Remove Image" res 
             runMainMenu
 
-runDockerRun :: IO ()
-runDockerRun = undefined 
-
-runDockerRm :: IO ()
-runDockerRm = undefined 
+runDockerRm :: UIDockerContainerRm.DockerContainerInfo -> IO ()
+runDockerRm oldInfo = do 
+    newInfo <- UIDockerContainerRm.uiDockerContainerRm oldInfo 
+    case UIDockerContainerRm.getCancel newInfo of 
+        True -> do 
+            resultDialog "Remove Container" "Cancelled"
+            runMainMenu
+        False -> do 
+            res <- execContainerRm $ unpack $ UIDockerContainerRm.getContainer newInfo
+            resultDialog "Remove Container" res 
+            runMainMenu
 
 runDockerExec :: IO ()
 runDockerExec = undefined 
@@ -83,4 +89,7 @@ runDockerStart = undefined
 
 runDockerStop :: IO ()
 runDockerStop = undefined 
+
+runDockerRun :: IO ()
+runDockerRun = undefined 
 
