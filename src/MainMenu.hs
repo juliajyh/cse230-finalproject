@@ -62,5 +62,10 @@ testMainMenu = do
     images <- imageLsCmd
     volumes <- volumeLsCmd
     networks <- networkLsCmd
-    c <- mainMenu containers images volumes networks
-    putStrLn $ "You chose: " <> show c
+    case (containers, images, volumes, networks) of 
+        (Left ex, _, _, _) -> putStrLn $ "Error: " ++ ex
+        (_, Left ex, _, _) -> putStrLn $ "Error: " ++ ex
+        (_, _, Left ex, _) -> putStrLn $ "Error: " ++ ex
+        (_, _, _, Left ex) -> putStrLn $ "Error: " ++ ex
+        (Right c, Right i, Right v, Right n) ->
+            putStrLn $ "You chose: " <> show c
