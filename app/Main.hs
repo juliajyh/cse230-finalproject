@@ -1,23 +1,30 @@
-{-# LANGUAGE OverloadedStrings #-}
-import TestBrickStates(testBrickStates)
-import TestThemes(testThemes)
-import ExecPull(testExecPull)
-import ExecStop (testExecStop)
-import ExecContainerRm (testExecContainerRm)
-import ExecImageRm (testExecImageRm)
-import ResultDialog(testResultDialog)
-import UIDockerRun(testUIDockerRun)
-import UIDockerPull (testUIDockerPull)
-import UIDockerImageRm (testUIDockerImageRm)
-import UIDockerContainerRm (testUIDockerContainerRm)
-import UIDockerStop (testUIDockerStop)
-import UIDockerExec (testUIDockerExec)
-import ExecRun (testExecRun)
-import Backend(test)
-import ExecStart (testExecStart)
-import ExecExec (testExecExec)
-import UIDockerStart (testUIDockerStart)
+-- {-# LANGUAGE OverloadedStrings #-}
+import ExecPull(execPull)
+import ExecStop (execStop)
+import ExecContainerRm (execContainerRm)
+import ExecImageRm (execImageRm)
+import ResultDialog(resultDialog)
+import UIDockerRun(uiDockerRun)
+import UIDockerPull (uiDockerPull)
+import UIDockerImageRm (uiDockerImageRm)
+import UIDockerContainerRm (uiDockerContainerRm)
+import UIDockerStop (uiDockerStop)
+import UIDockerExec (uiDockerExec)
+import ExecRun (execRun)
+import ExecStart (execStart)
+import ExecExec (execExec)
+import UIDockerStart (uiDockerStart)
 import MainMenu(mainMenu)
+import Backend
 
 main :: IO ()
-main = mainMenu
+main = runMainMenu
+
+runMainMenu :: IO ()
+runMainMenu = do 
+    containers <- psCmd
+    images <- imageLsCmd
+    volumes <- volumeLsCmd
+    networks <- networkLsCmd
+    case (containers, images, volumes, networks) of 
+        (Left s, _, _, _) -> 

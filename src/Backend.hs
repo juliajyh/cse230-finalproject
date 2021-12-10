@@ -1,4 +1,31 @@
-module Backend(test, psCmd, runCmd, stopCmd, startCmd, containerRmCmd, pullCmd, imageRmCmd, execCmd, imageLsCmd, volumeLsCmd, networkLsCmd) where
+module Backend(
+    test, 
+    psCmd, 
+    runCmd, 
+    stopCmd, 
+    startCmd, 
+    containerRmCmd, 
+    pullCmd, 
+    imageRmCmd, 
+    execCmd, 
+    imageLsCmd, 
+    volumeLsCmd, 
+    networkLsCmd,
+    ContainerLsInfo,
+    ImageLsInfo,
+    VolumeLsInfo,
+    NetworkLsInfo,
+    Command(
+        DockerMain,
+        DockerImagePull,
+        DockerImageRm,
+        DockerRun,
+        DockerRm,
+        DockerExec,
+        DockerStart,
+        DockerStop,
+        DockerHalt
+    )) where
 
 import System.Process
 import Text.JSON
@@ -7,6 +34,15 @@ import Text.Parsec.String
 import Text.JSON.Parsec (p_object)
 import Text.JSON.Types (JSString(JSONString))
 import GHC.IO.Exception (ExitCode(ExitSuccess, ExitFailure))
+
+-- type aliases
+type ContainerLsInfo = Either String [(String, String, String, String, String, String)]
+type ImageLsInfo = Either String [(String, String, String, String, String)]
+type VolumeLsInfo = Either String [(String, String, String, String)]
+type NetworkLsInfo = Either String [(String, String, String, String, String)]
+data Command = 
+    DockerMain | DockerImagePull | DockerImageRm | DockerRun | DockerRm | DockerExec | DockerStart | DockerStop | DockerHalt
+    deriving (Show)
 
 -- testing
 test :: IO ()
@@ -21,7 +57,7 @@ runTest f = do
 
 -- ps Command
 -- ("ID", "Names", "Image", "State", "Status", "Ports")
-psCmd :: IO (Either String [(String, String, String, String, String, String)])
+psCmd :: IO ContainerLsInfo
 psCmd = do
     j <- runDockerPs
     case j of
@@ -174,12 +210,12 @@ getImageLsEntry jsonObj =
         created = getEntry "CreatedSince" jsonObj
         size = getEntry "Size" jsonObj
 
-testImageLs :: IO (Either String [(String, String, String, String, String)])
+testImageLs :: IO ImageLsInfo
 testImageLs = imageLsCmd
 
 -- volume ls Command
 -- (Name, Mount_Point, Driver, Size)
-volumeLsCmd :: IO (Either String [(String, String, String, String)])
+volumeLsCmd :: IO VolumeLsInfo
 volumeLsCmd = do 
     j <- runDockerVolumeLs
     case j of 
@@ -208,7 +244,7 @@ testVolumeLs = volumeLsCmd
 
 -- network ls Command
 -- (ID, Name, Driver, Scope, Created)
-networkLsCmd :: IO (Either String [(String, String, String, String, String)])
+networkLsCmd :: IO NetworkLsInfo
 networkLsCmd = do 
     j <- runDockerNetworkLs
     case j of 
