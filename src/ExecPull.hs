@@ -41,7 +41,7 @@ appEvent s (T.VtyEvent ev) =
             val <- liftIO $ pullCmd s
             case val of
                 Left ex -> M.halt ex
-                Right res -> M.halt $ "Successfully pulled image \"" ++ s ++ "\n"
+                Right res -> M.halt $ "Successfully pulled image \"" ++ s ++ "\"\n"
         _ -> M.continue s
 appEvent s _ = M.continue s
 

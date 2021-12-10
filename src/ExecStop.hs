@@ -40,7 +40,7 @@ appEvent s (T.VtyEvent ev) =
             val <- liftIO $ stopCmd s
             case val of
                 Left ex -> M.halt ex
-                Right res -> M.halt $ "Successfully stopped container \"" ++ s ++ "\n"
+                Right res -> M.halt $ "Successfully stopped container \"" ++ s ++ "\"\n"
         _ -> M.continue s
 appEvent s _ = M.continue s
 

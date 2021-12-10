@@ -40,7 +40,7 @@ appEvent s (T.VtyEvent ev) =
             val <- liftIO $ imageRmCmd s
             case val of
                 Left ex -> M.halt ex
-                Right res -> M.halt $ "Successfully removed image \"" ++ s ++ "\n"
+                Right res -> M.halt $ "Successfully removed image \"" ++ s ++ "\"\n"
         _ -> M.continue s
 appEvent s _ = M.continue s
 

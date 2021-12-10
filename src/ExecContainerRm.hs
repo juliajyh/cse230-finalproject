@@ -41,7 +41,7 @@ appEvent s (T.VtyEvent ev) =
             val <- liftIO $ containerRmCmd s
             case val of
                 Left ex -> M.halt ex
-                Right res -> M.halt $ "Successfully removed container \"" ++ s ++ "\n"
+                Right res -> M.halt $ "Successfully removed container \"" ++ s ++ "\"\n"
         _ -> M.continue s
 appEvent s _ = M.continue s
 
