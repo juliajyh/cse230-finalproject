@@ -54,10 +54,10 @@ app =
           , M.appAttrMap = \_ -> themeToAttrMap theme1
           }
 
-execImageRm :: IO String 
-execImageRm = M.defaultMain app "fedora"
+execImageRm :: String -> IO String 
+execImageRm = M.defaultMain app 
 
 testExecImageRm :: IO ()
 testExecImageRm = do
-    s <- execImageRm
+    s <- execImageRm "fedora"
     print s

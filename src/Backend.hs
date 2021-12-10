@@ -46,7 +46,7 @@ data Command =
 
 -- testing
 test :: IO ()
-test = runTest testStart
+test = runTest testImageRm
 
 runTest :: (Show a) => IO (Either String a) -> IO ()
 runTest f = do

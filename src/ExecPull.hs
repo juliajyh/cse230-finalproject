@@ -55,10 +55,10 @@ app =
           , M.appAttrMap = \_ -> themeToAttrMap theme1
           }
 
-execPull :: IO String 
-execPull = M.defaultMain app "fedora"
+execPull :: String -> IO String 
+execPull = M.defaultMain app 
 
 testExecPull :: IO ()
 testExecPull = do
-    s <- execPull
+    s <- execPull "fedora"
     resultDialog "Pull Image" s

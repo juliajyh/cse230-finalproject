@@ -1,7 +1,14 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverloadedStrings #-}
-module UIDockerPull(testUIDockerPull, uiDockerPull, initialDockerImageInfo, DockerImageInfo) where
+module UIDockerPull(
+  testUIDockerPull, 
+  uiDockerPull, 
+  initialDockerImageInfo, 
+  DockerImageInfo,
+  getImage,
+  getCancel
+  ) where
 
 import qualified Data.Text as T
 import Lens.Micro ((^.))
@@ -63,6 +70,12 @@ data DockerImageInfo =
              deriving (Show)
 
 makeLenses ''DockerImageInfo
+
+getImage :: DockerImageInfo -> T.Text
+getImage info = _image info
+
+getCancel :: DockerImageInfo -> Bool 
+getCancel info = _cancel info
 
 -- This form is covered in the Brick User Guide; see the "Input Forms"
 -- section.

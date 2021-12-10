@@ -5,8 +5,8 @@ import ExecContainerRm (execContainerRm)
 import ExecImageRm (execImageRm)
 import ResultDialog(resultDialog)
 import UIDockerRun(uiDockerRun)
-import UIDockerPull (uiDockerPull)
-import UIDockerImageRm (uiDockerImageRm)
+import qualified UIDockerPull (uiDockerPull, DockerImageInfo, initialDockerImageInfo, getImage, getCancel)
+import qualified UIDockerImageRm (uiDockerImageRm, DockerImageInfo, initialDockerImageInfo, getImage, getCancel)
 import UIDockerContainerRm (uiDockerContainerRm)
 import UIDockerStop (uiDockerStop)
 import UIDockerExec (uiDockerExec)
@@ -16,6 +16,7 @@ import ExecExec (execExec)
 import UIDockerStart (uiDockerStart)
 import MainMenu(mainMenu)
 import Backend
+import Data.Text(unpack)
 
 main :: IO ()
 main = runMainMenu
@@ -35,8 +36,8 @@ runMainMenu = do
             cmd <- mainMenu c i v n
             case cmd of 
                 DockerMain -> runMainMenu
-                DockerImagePull -> runDockerImagePull
-                DockerImageRm  -> runDockerImageRm
+                DockerImagePull -> runDockerImagePull UIDockerPull.initialDockerImageInfo
+                DockerImageRm  -> runDockerImageRm UIDockerImageRm.initialDockerImageInfo
                 DockerRun -> runDockerRun
                 DockerRm -> runDockerRm
                 DockerExec -> runDockerExec
@@ -44,11 +45,29 @@ runMainMenu = do
                 DockerStop -> runDockerStop
                 DockerHalt -> return ()
 
-runDockerImagePull :: IO ()
-runDockerImagePull = undefined 
+runDockerImagePull :: UIDockerPull.DockerImageInfo -> IO ()
+runDockerImagePull oldInfo = do 
+    newInfo <- UIDockerPull.uiDockerPull oldInfo 
+    case UIDockerPull.getCancel newInfo of
+        True -> do 
+            resultDialog "Pull Image" "Cancelled"
+            runMainMenu
+        False -> do 
+            res <- execPull $ unpack $ UIDockerPull.getImage newInfo
+            resultDialog "Pull Image" res 
+            runMainMenu
 
-runDockerImageRm :: IO ()
-runDockerImageRm = undefined 
+runDockerImageRm :: UIDockerImageRm.DockerImageInfo -> IO ()
+runDockerImageRm oldInfo = do 
+    newInfo <- UIDockerImageRm.uiDockerImageRm oldInfo
+    case UIDockerImageRm.getCancel newInfo of
+        True -> do 
+            resultDialog "Remove Image" "Cancelled"
+            runMainMenu
+        False -> do 
+            res <- execImageRm $ unpack $ UIDockerImageRm.getImage newInfo
+            resultDialog "Remove Image" res 
+            runMainMenu
 
 runDockerRun :: IO ()
 runDockerRun = undefined 
