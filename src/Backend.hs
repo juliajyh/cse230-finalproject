@@ -1,4 +1,33 @@
-module Backend(test, psCmd, runCmd, stopCmd, startCmd, containerRmCmd, pullCmd, imageRmCmd, execCmd, imageLsCmd, volumeLsCmd, networkLsCmd) where
+module Backend(
+    test, 
+    psCmd, 
+    runCmd, 
+    stopCmd, 
+    startCmd, 
+    containerRmCmd, 
+    pullCmd, 
+    imageRmCmd, 
+    execCmd, 
+    imageLsCmd, 
+    volumeLsCmd, 
+    networkLsCmd,
+    ContainerLsInfo,
+    ImageLsInfo,
+    VolumeLsInfo,
+    NetworkLsInfo,
+    Command(
+        DockerMain,
+        DockerImagePull,
+        DockerImageRm,
+        DockerRun,
+        DockerRm,
+        DockerExec,
+        DockerStart,
+        DockerStop,
+        DockerHalt
+    ),
+    parsePortMaps,
+    parseMountMaps) where
 
 import System.Process
 import Text.JSON
@@ -8,9 +37,18 @@ import Text.JSON.Parsec (p_object)
 import Text.JSON.Types (JSString(JSONString))
 import GHC.IO.Exception (ExitCode(ExitSuccess, ExitFailure))
 
+-- type aliases
+type ContainerLsInfo = [(String, String, String, String, String, String)]
+type ImageLsInfo = [(String, String, String, String, String)]
+type VolumeLsInfo = [(String, String, String, String)]
+type NetworkLsInfo = [(String, String, String, String, String)]
+data Command = 
+    DockerMain | DockerImagePull | DockerImageRm | DockerRun | DockerRm | DockerExec | DockerStart | DockerStop | DockerHalt
+    deriving (Show)
+
 -- testing
 test :: IO ()
-test = runTest testStart
+test = runTest testImageRm
 
 runTest :: (Show a) => IO (Either String a) -> IO ()
 runTest f = do
@@ -21,7 +59,7 @@ runTest f = do
 
 -- ps Command
 -- ("ID", "Names", "Image", "State", "Status", "Ports")
-psCmd :: IO (Either String [(String, String, String, String, String, String)])
+psCmd :: IO (Either String ContainerLsInfo)
 psCmd = do
     j <- runDockerPs
     case j of
@@ -149,7 +187,7 @@ testStart = startCmd "test"
 
 -- image ls Command
 -- (ID, Repo, Tag, Created, Size)
-imageLsCmd :: IO (Either String [(String, String, String, String, String)])
+imageLsCmd :: IO (Either String ImageLsInfo)
 imageLsCmd = do 
     j <- runDockerImageLs
     case j of 
@@ -174,12 +212,12 @@ getImageLsEntry jsonObj =
         created = getEntry "CreatedSince" jsonObj
         size = getEntry "Size" jsonObj
 
-testImageLs :: IO (Either String [(String, String, String, String, String)])
+testImageLs :: IO (Either String ImageLsInfo)
 testImageLs = imageLsCmd
 
 -- volume ls Command
 -- (Name, Mount_Point, Driver, Size)
-volumeLsCmd :: IO (Either String [(String, String, String, String)])
+volumeLsCmd :: IO (Either String VolumeLsInfo)
 volumeLsCmd = do 
     j <- runDockerVolumeLs
     case j of 
@@ -208,7 +246,7 @@ testVolumeLs = volumeLsCmd
 
 -- network ls Command
 -- (ID, Name, Driver, Scope, Created)
-networkLsCmd :: IO (Either String [(String, String, String, String, String)])
+networkLsCmd :: IO (Either String NetworkLsInfo)
 networkLsCmd = do 
     j <- runDockerNetworkLs
     case j of 
@@ -271,8 +309,62 @@ word = do
 words :: Parser [String]
 words = many word
 
--- >>> parseFromString Backend.words "/mnt/frps -c /mnt/frps.ini"
--- Right ["/mnt/frps","-c","/mnt/frps.ini"]
+portMap :: Parser (String, String) 
+portMap = do 
+    _ <- spaces 
+    p1 <- many1 digit
+    _ <- spaces 
+    _ <- char ':'
+    p2 <- many1 digit 
+    _ <- spaces 
+    return (p1, p2)
+
+portMaps :: [(String, String)] -> Parser [(String, String)]
+portMaps xs = do 
+        pm <- portMap 
+        c <- optionMaybe $ char ','
+        case c of 
+            Nothing -> return (xs ++ [pm]) 
+            Just _ -> portMaps (xs ++ [pm]) 
+
+parsePortMaps :: String -> Either String [(String, String)]
+parsePortMaps "" = Right []
+parsePortMaps s = 
+    case parseFromString (portMaps []) s of 
+        Left ex -> Left $ "Invalid Input: \"" ++ s ++ "\""
+        Right res -> Right res
+
+mountMap :: Parser (String, String)
+mountMap = do 
+    _ <- spaces 
+    v1 <- many1 $ satisfy $ isNotChars [';', '\n', ' ', ':']
+    _ <- spaces
+    _ <- char ':'
+    _ <- spaces 
+    v2 <- many1 $ satisfy $ isNotChars [';', '\n', ' ', ':']
+    _ <- many $ char ' '
+    return (v1, v2)
+
+mountMaps :: [(String, String)] -> Parser [(String, String)]
+mountMaps xs = do 
+        m <- mountMap 
+        c <- optionMaybe $ char ';' <|> char '\n'
+        case c of 
+            Nothing -> return (xs ++ [m]) 
+            Just _ -> mountMaps (xs ++ [m]) 
+
+parseMountMaps :: String -> Either String [(String, String)]
+parseMountMaps "" = Right []
+parseMountMaps s = 
+    case parseFromString (mountMaps []) s of 
+        Left ex -> Left $ "Invalid Input: \"" ++ s ++ "\""
+        Right res -> Right res 
+
+-- >>> parsePortMaps " 80: "
+-- Left "Invalid Input: \" 80: \""
+
+-- >>> parseMountMaps " /home/sd/as:/asd/s \n /sd:/sd ; /sdw:/wd"
+-- Right [("/home/sd/as","/asd/s"),("/sd","/sd"),("/sdw","/wd")]
 
 
 psline :: Parser [(String, JSValue)]

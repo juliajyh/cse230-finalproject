@@ -55,10 +55,10 @@ app =
           , M.appAttrMap = \_ -> themeToAttrMap theme1
           }
 
-execStart :: IO String 
-execStart = M.defaultMain app "tst"
+execStart :: String -> IO String 
+execStart = M.defaultMain app 
 
 testExecStart :: IO ()
 testExecStart = do
-    s <- execStart
+    s <- execStart "test"
     resultDialog "Start Container" s

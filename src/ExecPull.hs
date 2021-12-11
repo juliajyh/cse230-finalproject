@@ -41,7 +41,7 @@ appEvent s (T.VtyEvent ev) =
             val <- liftIO $ pullCmd s
             case val of
                 Left ex -> M.halt ex
-                Right res -> M.halt $ "Successfully pulled image \"" ++ s ++ "\n"
+                Right res -> M.halt $ "Successfully pulled image \"" ++ s ++ "\"\n"
         _ -> M.continue s
 appEvent s _ = M.continue s
 
@@ -55,10 +55,10 @@ app =
           , M.appAttrMap = \_ -> themeToAttrMap theme1
           }
 
-execPull :: IO String 
-execPull = M.defaultMain app "fedora"
+execPull :: String -> IO String 
+execPull = M.defaultMain app 
 
 testExecPull :: IO ()
 testExecPull = do
-    s <- execPull
+    s <- execPull "fedora"
     resultDialog "Pull Image" s

@@ -1,7 +1,20 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverloadedStrings #-}
-module UIDockerRun(testUIDockerRun, uiDockerRun, initialDockerRunInfo, DockerRunInfo) where
+module UIDockerRun(
+    testUIDockerRun, 
+    uiDockerRun, 
+    initialDockerRunInfo, 
+    DockerRunInfo,
+    getImage,
+    getName,
+    getMounts,
+    getPorts,
+    getCommand,
+    getAttach,
+    getVolatile,
+    getDaemon,
+    getCancel) where
 
 import qualified Data.Text as T
 import Lens.Micro ((^.))
@@ -77,6 +90,33 @@ data DockerRunInfo =
              deriving (Show)
 
 makeLenses ''DockerRunInfo
+
+getImage :: DockerRunInfo -> T.Text
+getImage = _image
+
+getName :: DockerRunInfo -> T.Text
+getName = _name
+
+getMounts :: DockerRunInfo -> T.Text
+getMounts = _mounts
+
+getPorts :: DockerRunInfo -> T.Text
+getPorts = _ports
+
+getCommand :: DockerRunInfo -> T.Text
+getCommand = _command
+
+getAttach :: DockerRunInfo -> Bool
+getAttach = _attach
+
+getVolatile :: DockerRunInfo -> Bool
+getVolatile = _volatile
+
+getDaemon :: DockerRunInfo -> Bool
+getDaemon = _daemon
+
+getCancel :: DockerRunInfo -> Bool
+getCancel = _cancel
 
 -- This form is covered in the Brick User Guide; see the "Input Forms"
 -- section.

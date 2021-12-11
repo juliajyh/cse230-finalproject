@@ -1,4 +1,4 @@
-module ExecRun(execRun, testExecRun) where
+module ExecRun(execRun) where
 
 import Control.Monad(void)
 import qualified Graphics.Vty as V
@@ -36,20 +36,20 @@ getUI image name = [ui]
                 str "Please Wait ..."
             ]
 
-getAppEvent :: RunArgs -> String -> BrickEvent () e -> T.EventM () (T.Next String)
+getAppEvent :: RunArgs -> Either String String-> BrickEvent () e -> T.EventM () (T.Next (Either String String))
 getAppEvent args s (T.VtyEvent ev) =
     case ev of
-        V.EvKey V.KEsc [] -> M.halt "Cancelled"
+        V.EvKey V.KEsc [] -> M.halt $ Left "Cancelled"
         V.EvKey V.KEnter [] -> do 
             val <- liftIO $ runCmd args
             case val of
-                Left ex -> M.halt ex
-                Right res -> M.halt $ "Success: " ++ res
+                Left ex -> M.halt $ Left ex
+                Right res -> M.halt $ Right $ "Success: " ++ res
         _ -> M.continue s
 getAppEvent args s _ = M.continue s
 
 
-getApp :: RunArgs -> M.App String e ()
+getApp :: RunArgs -> M.App (Either String String) e ()
 getApp args@(image, name, mounts, ports, command, attach, volatile, daemon) =
     M.App { M.appDraw = const $ getUI image name
           , M.appChooseCursor = M.neverShowCursor
@@ -61,10 +61,10 @@ getApp args@(image, name, mounts, ports, command, attach, volatile, daemon) =
 defaultRunArgs :: RunArgs
 defaultRunArgs = ("hcyang99/snps16", "cad", [("/home/hcyang/Documents/source/repos/patternet", "/mnt/repos/patternet"), ("/home/hcyang/Documents/source/env/snps16/.vscode-server/", "/root/.vscode-server")], [("80", "80"), ("443", "443")], "uname -r", False, True, False)
 
-execRun :: RunArgs -> IO String 
-execRun args = M.defaultMain (getApp args) ""
+execRun :: RunArgs -> IO (Either String String) 
+execRun args = M.defaultMain (getApp args) (Right "")
 
-testExecRun :: IO ()
-testExecRun = do
-    s <- execRun defaultRunArgs
-    resultDialog "Run Container" s
+-- testExecRun :: IO ()
+-- testExecRun = do
+--     s <- execRun defaultRunArgs
+--     resultDialog "Run Container" s

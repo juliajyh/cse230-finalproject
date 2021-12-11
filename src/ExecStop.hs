@@ -40,7 +40,7 @@ appEvent s (T.VtyEvent ev) =
             val <- liftIO $ stopCmd s
             case val of
                 Left ex -> M.halt ex
-                Right res -> M.halt $ "Successfully stopped container \"" ++ s ++ "\n"
+                Right res -> M.halt $ "Successfully stopped container \"" ++ s ++ "\"\n"
         _ -> M.continue s
 appEvent s _ = M.continue s
 
@@ -54,10 +54,10 @@ app =
           , M.appAttrMap = \_ -> themeToAttrMap theme1
           }
 
-execStop :: IO String 
-execStop = M.defaultMain app "fedora"
+execStop :: String -> IO String 
+execStop = M.defaultMain app 
 
 testExecStop :: IO ()
 testExecStop = do
-    s <- execStop
+    s <- execStop "fedora"
     print s
