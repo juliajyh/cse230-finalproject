@@ -25,7 +25,9 @@ module Backend(
         DockerStart,
         DockerStop,
         DockerHalt
-    )) where
+    ),
+    parsePortMaps,
+    parseMountMaps) where
 
 import System.Process
 import Text.JSON
@@ -307,8 +309,62 @@ word = do
 words :: Parser [String]
 words = many word
 
--- >>> parseFromString Backend.words "/mnt/frps -c /mnt/frps.ini"
--- Right ["/mnt/frps","-c","/mnt/frps.ini"]
+portMap :: Parser (String, String) 
+portMap = do 
+    _ <- spaces 
+    p1 <- many1 digit
+    _ <- spaces 
+    _ <- char ':'
+    p2 <- many1 digit 
+    _ <- spaces 
+    return (p1, p2)
+
+portMaps :: [(String, String)] -> Parser [(String, String)]
+portMaps xs = do 
+        pm <- portMap 
+        c <- optionMaybe $ char ','
+        case c of 
+            Nothing -> return (xs ++ [pm]) 
+            Just _ -> portMaps (xs ++ [pm]) 
+
+parsePortMaps :: String -> Either String [(String, String)]
+parsePortMaps "" = Right []
+parsePortMaps s = 
+    case parseFromString (portMaps []) s of 
+        Left ex -> Left $ "Invalid Input: \"" ++ s ++ "\""
+        Right res -> Right res
+
+mountMap :: Parser (String, String)
+mountMap = do 
+    _ <- spaces 
+    v1 <- many1 $ satisfy $ isNotChars [';', '\n', ' ', ':']
+    _ <- spaces
+    _ <- char ':'
+    _ <- spaces 
+    v2 <- many1 $ satisfy $ isNotChars [';', '\n', ' ', ':']
+    _ <- many $ char ' '
+    return (v1, v2)
+
+mountMaps :: [(String, String)] -> Parser [(String, String)]
+mountMaps xs = do 
+        m <- mountMap 
+        c <- optionMaybe $ char ';' <|> char '\n'
+        case c of 
+            Nothing -> return (xs ++ [m]) 
+            Just _ -> mountMaps (xs ++ [m]) 
+
+parseMountMaps :: String -> Either String [(String, String)]
+parseMountMaps "" = Right []
+parseMountMaps s = 
+    case parseFromString (mountMaps []) s of 
+        Left ex -> Left $ "Invalid Input: \"" ++ s ++ "\""
+        Right res -> Right res 
+
+-- >>> parsePortMaps " 80: "
+-- Left "Invalid Input: \" 80: \""
+
+-- >>> parseMountMaps " /home/sd/as:/asd/s \n /sd:/sd ; /sdw:/wd"
+-- Right [("/home/sd/as","/asd/s"),("/sd","/sd"),("/sdw","/wd")]
 
 
 psline :: Parser [(String, JSValue)]

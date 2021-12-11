@@ -4,7 +4,7 @@ import ExecStop (execStop)
 import ExecContainerRm (execContainerRm)
 import ExecImageRm (execImageRm)
 import ResultDialog(resultDialog)
-import UIDockerRun(uiDockerRun)
+import qualified UIDockerRun as R
 import qualified UIDockerPull (uiDockerPull, DockerImageInfo, initialDockerImageInfo, getImage, getCancel)
 import qualified UIDockerImageRm (uiDockerImageRm, DockerImageInfo, initialDockerImageInfo, getImage, getCancel)
 import qualified UIDockerContainerRm (uiDockerContainerRm, initialDockerContainerInfo, DockerContainerInfo, getContainer, getCancel)
@@ -38,7 +38,7 @@ runMainMenu = do
                 DockerMain -> runMainMenu
                 DockerImagePull -> runDockerImagePull UIDockerPull.initialDockerImageInfo
                 DockerImageRm  -> runDockerImageRm UIDockerImageRm.initialDockerImageInfo
-                DockerRun -> runDockerRun 
+                DockerRun -> runDockerRun R.initialDockerRunInfo
                 DockerRm -> runDockerRm UIDockerContainerRm.initialDockerContainerInfo
                 DockerExec -> runDockerExec UIDockerExec.initialDockerExecInfo
                 DockerStart -> runDockerStart UIDockerStart.initialDockerContainerInfo
@@ -117,6 +117,44 @@ runDockerStop oldInfo = do
             resultDialog "Stop Container" res 
             runMainMenu
 
-runDockerRun :: IO ()
-runDockerRun = undefined 
+runDockerRun :: R.DockerRunInfo -> IO ()
+runDockerRun oldInfo = do 
+    newInfo <- R.uiDockerRun oldInfo 
+    case R.getCancel newInfo of 
+        True -> do 
+            resultDialog "Run Container" "Cancelled"
+            runMainMenu
+        False -> do 
+            let 
+                image = unpack $ R.getImage newInfo 
+                name = unpack $ R.getName newInfo 
+                ports = parsePortMaps $ unpack $ R.getPorts newInfo 
+                mounts = parseMountMaps $ unpack $ R.getMounts newInfo 
+                command = unpack $ R.getCommand newInfo 
+                attach = R.getAttach newInfo 
+                volatile = R.getVolatile newInfo
+                daemon = R.getDaemon newInfo 
+                cancel = R.getCancel newInfo 
+            case cancel of 
+                True -> do 
+                    resultDialog "Run Container" "Cancelled"
+                    runMainMenu
+                False -> 
+                    case (ports, mounts) of 
+                        (Left ex, _) -> do 
+                            resultDialog "Run Container" ex 
+                            runDockerRun newInfo 
+                        (_, Left ex) -> do 
+                            resultDialog "Run Container" ex 
+                            runDockerRun newInfo 
+                        (Right p, Right m) -> do 
+                            res <- execRun (image, name, m, p, command, False, volatile, daemon)
+                            case res of 
+                                Left ex -> do 
+                                    resultDialog "Run Container" ex 
+                                    runDockerRun newInfo 
+                                Right s -> do 
+                                    resultDialog "Run Container" s 
+                                    runMainMenu
+
 
