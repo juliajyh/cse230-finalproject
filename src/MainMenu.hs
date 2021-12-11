@@ -28,6 +28,7 @@ import Brick.Widgets.Core
   , vBox
   , viewport
   , str
+  , updateAttrMap
   )
 
 data Name = IVP1
@@ -68,8 +69,13 @@ type Network = ([String], [String], [String], [String], [String])
 getUI :: Image -> Container -> Volume -> Network -> () -> [Widget Name]
 getUI is cs vs ns = const [ui]
     where
+
         ui = C.center $ B.border $ hLimit 150 $ vLimit 40 $
-             vBox [str "abcde to scroll down, ABCDE to scroll up", B.hBorder, imageslist, B.hBorder, str "fghijk to scroll down, FGHIJK to scroll up", B.hBorder, containerslist, B.hBorder, str "lmno to scroll down, LMNO to scroll up", B.hBorder, volumeslist, B.hBorder, str "pqrst to scroll down, PQRST to scroll up", B.hBorder, networklist]
+             vBox [str $ 
+            "Press 'r' to run container; Press 'i' to pull image; Press 'd' to remove container;\n" <>
+            "Press 'x' to remove image; Press 'e' to execute command; Press 'a' to start container;\n" <>
+            "Press 's' to stop container; Press <Enter> to refresh; Press <Esc> to quit" , 
+                  str "abcde to scroll down, ABCDE to scroll up", B.hBorder, imageslist, B.hBorder, str "fghijk to scroll down, FGHIJK to scroll up", B.hBorder, containerslist, B.hBorder, str "lmno to scroll down, LMNO to scroll up", B.hBorder, volumeslist, B.hBorder, str "pqrst to scroll down, PQRST to scroll up", B.hBorder, networklist]
         (il1, il2, il3, il4, il5) = is
         (cl1, cl2, cl3, cl4, cl5, cl6) = cs
         (vl1, vl2, vl3, vl4) = vs
@@ -243,20 +249,23 @@ nvp4Scroll = M.viewportScroll NVP4
 nvp5Scroll :: M.ViewportScroll Name
 nvp5Scroll = M.viewportScroll NVP5
 
-
 appEvent :: () -> T.BrickEvent Name e -> T.EventM Name (T.Next ())
-appEvent _ (T.VtyEvent (V.EvKey (V.KChar 'a') [])) = M.vScrollBy ivp1Scroll 1 >> M.continue ()
-appEvent _ (T.VtyEvent (V.EvKey (V.KChar 'A') []))  = M.vScrollBy ivp1Scroll (-1) >> M.continue ()
-appEvent _ (T.VtyEvent (V.EvKey (V.KChar 'b') [])) = M.vScrollBy ivp2Scroll 1 >> M.continue ()
-appEvent _ (T.VtyEvent (V.EvKey (V.KChar 'B') []))  = M.vScrollBy ivp2Scroll (-1) >> M.continue ()
 
-appEvent _ (T.VtyEvent (V.EvKey (V.KChar 'c') [])) = M.vScrollBy ivp3Scroll 1 >> M.continue ()
-appEvent _ (T.VtyEvent (V.EvKey (V.KChar 'C') []))  = M.vScrollBy ivp3Scroll (-1) >> M.continue ()
-appEvent _ (T.VtyEvent (V.EvKey (V.KChar 'd') [])) = M.vScrollBy ivp4Scroll 1 >> M.continue ()
-appEvent _ (T.VtyEvent (V.EvKey (V.KChar 'D') []))  = M.vScrollBy ivp4Scroll (-1) >> M.continue ()
+appEvent _ (T.VtyEvent (V.EvKey (V.KChar 'a') [])) = map (\x -> M.vScrollBy (M.viewportScroll x) 1) [IVP1, IVP2, IVP3, IVP4, IVP5] >> M.continue()
+appEvent _ (T.VtyEvent (V.EvKey (V.KChar 'A') []))  = map (\x -> M.vScrollBy (M.viewportScroll x) (-1)) [IVP1, IVP2, IVP3, IVP4, IVP5] >> M.continue()
 
-appEvent _ (T.VtyEvent (V.EvKey (V.KChar 'e') [])) = M.vScrollBy ivp5Scroll 1 >> M.continue ()
-appEvent _ (T.VtyEvent (V.EvKey (V.KChar 'E') []))  = M.vScrollBy ivp5Scroll (-1) >> M.continue ()
+-- appEvent _ (T.VtyEvent (V.EvKey (V.KChar 'a') [])) = M.vScrollBy ivp1Scroll 1 >> M.continue ()
+-- appEvent _ (T.VtyEvent (V.EvKey (V.KChar 'A') []))  = M.vScrollBy ivp1Scroll (-1) >> M.continue ()
+-- appEvent _ (T.VtyEvent (V.EvKey (V.KChar 'b') [])) = M.vScrollBy ivp2Scroll 1 >> M.continue ()
+-- appEvent _ (T.VtyEvent (V.EvKey (V.KChar 'B') []))  = M.vScrollBy ivp2Scroll (-1) >> M.continue ()
+
+-- appEvent _ (T.VtyEvent (V.EvKey (V.KChar 'c') [])) = M.vScrollBy ivp3Scroll 1 >> M.continue ()
+-- appEvent _ (T.VtyEvent (V.EvKey (V.KChar 'C') []))  = M.vScrollBy ivp3Scroll (-1) >> M.continue ()
+-- appEvent _ (T.VtyEvent (V.EvKey (V.KChar 'd') [])) = M.vScrollBy ivp4Scroll 1 >> M.continue ()
+-- appEvent _ (T.VtyEvent (V.EvKey (V.KChar 'D') []))  = M.vScrollBy ivp4Scroll (-1) >> M.continue ()
+
+-- appEvent _ (T.VtyEvent (V.EvKey (V.KChar 'e') [])) = M.vScrollBy ivp5Scroll 1 >> M.continue ()
+-- appEvent _ (T.VtyEvent (V.EvKey (V.KChar 'E') []))  = M.vScrollBy ivp5Scroll (-1) >> M.continue ()
 appEvent _ (T.VtyEvent (V.EvKey (V.KChar 'f') [])) = M.vScrollBy cvp1Scroll 1 >> M.continue ()
 appEvent _ (T.VtyEvent (V.EvKey (V.KChar 'F') []))  = M.vScrollBy cvp1Scroll (-1) >> M.continue ()
 
@@ -299,14 +308,6 @@ appEvent _ (T.VtyEvent (V.EvKey (V.KChar 'T') []))  = M.vScrollBy nvp5Scroll (-1
 appEvent _ (T.VtyEvent (V.EvKey V.KEsc [])) = M.halt ()
 appEvent _ _ = M.continue ()
 
-app :: Image -> Container -> Volume -> Network -> M.App () e Name
-app i c v n =
-    M.App { M.appDraw = getUI i c v n
-          , M.appStartEvent = return
-          , M.appHandleEvent = appEvent
-          , M.appAttrMap = const $ attrMap V.defAttr []
-          , M.appChooseCursor = M.neverShowCursor
-          }
 
 -- handle image
 pImagesCmd :: IO Image
@@ -375,11 +376,73 @@ tupToNetworkList (l:ls) = ((l1:ls1), (l2:ls2), (l3:ls3), (l4:ls4), (l5:ls5))
           (ls1, ls2, ls3, ls4, ls5) = tupToNetworkList ls
 
 
+appEvent :: Command -> BrickEvent () e -> T.EventM () (T.Next Command)
+appEvent d (T.VtyEvent ev) = 
+    case ev of 
+        V.EvKey V.KEsc [] -> M.halt DockerHalt
+        V.EvKey V.KEnter [] -> M.halt DockerMain
+        V.EvKey (V.KChar 'r') [] -> M.halt DockerRun 
+        V.EvKey (V.KChar 'i') [] -> M.halt DockerImagePull
+        V.EvKey (V.KChar 'd') [] -> M.halt DockerRm 
+        V.EvKey (V.KChar 'x') [] -> M.halt DockerImageRm 
+        V.EvKey (V.KChar 'e') [] -> M.halt DockerExec
+        V.EvKey (V.KChar 'a') [] -> M.halt DockerStart 
+        V.EvKey (V.KChar 's') [] -> M.halt DockerStop
+
+        _ -> M.continue d 
+
+appEvent d _ = M.continue d
+
+app :: Image -> Container -> Volume -> Network -> M.App () e Name
+app i c v n =
+    M.App { M.appDraw = getUI i c v n
+          , M.appStartEvent = return
+          , M.appHandleEvent = appEvent
+          , M.appAttrMap = const $ attrMap V.defAttr []
+          , M.appChooseCursor = M.neverShowCursor
+          }
+
+initialState :: Command 
+initialState = DockerMain
+
+
+mainMenu :: ContainerLsInfo -> ImageLsInfo -> VolumeLsInfo -> NetworkLsInfo -> IO Command
+mainMenu i c v n = M.defaultMain (app i c v n) DockerMain
+
+-- runMainMenu :: IO ()
+-- runMainMenu = do 
+--     containers <- psCmd
+--     images <- imageLsCmd
+--     volumes <- volumeLsCmd
+--     networks <- networkLsCmd
+--     case (containers, images, volumes, networks) of 
+--         (Left ex, _, _, _) -> resultDialog "Error" ex
+--         (_, Left ex, _, _) -> resultDialog "Error" ex
+--         (_, _, Left ex, _) -> resultDialog "Error" ex
+--         (_, _, _, Left ex) -> resultDialog "Error" ex
+--         (Right c, Right i, Right v, Right n) -> do 
+--             cmd <- mainMenu c i v n
+--             case cmd of 
+--                 DockerMain -> runMainMenu
+--                 DockerImagePull -> runDockerImagePull UIDockerPull.initialDockerImageInfo
+--                 DockerImageRm  -> runDockerImageRm UIDockerImageRm.initialDockerImageInfo
+--                 DockerRun -> runDockerRun R.initialDockerRunInfo
+--                 DockerRm -> runDockerRm UIDockerContainerRm.initialDockerContainerInfo
+--                 DockerExec -> runDockerExec UIDockerExec.initialDockerExecInfo
+--                 DockerStart -> runDockerStart UIDockerStart.initialDockerContainerInfo
+--                 DockerStop -> runDockerStop UIDockerStop.initialDockerContainerInfo
+--                 DockerHalt -> return ()
 
 main :: IO ()
-main = do
-  container <- pContainersCmd
-  image <- pImagesCmd
-  volume <- pVolumesCmd
-  network <- pNetworkCmd
-  void $ M.defaultMain (app image container volume network) ()
+main = do 
+    containers <- psCmd
+    images <- imageLsCmd
+    volumes <- volumeLsCmd
+    networks <- networkLsCmd
+    case (containers, images, volumes, networks) of 
+        (Left ex, _, _, _) -> putStrLn $ "Error: " ++ ex
+        (_, Left ex, _, _) -> putStrLn $ "Error: " ++ ex
+        (_, _, Left ex, _) -> putStrLn $ "Error: " ++ ex
+        (_, _, _, Left ex) -> putStrLn $ "Error: " ++ ex
+        (Right c, Right i, Right v, Right n) ->
+            putStrLn $ "You chose: " <> show c
