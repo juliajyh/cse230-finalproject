@@ -30,6 +30,7 @@ dependencies:
 - microlens
 - microlens-th
 - text
+- text-conversions
 
 library:
   source-dirs: src

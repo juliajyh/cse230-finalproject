@@ -14,7 +14,7 @@ import qualified UIDockerStart (uiDockerStart, initialDockerContainerInfo, Docke
 import ExecRun (execRun)
 import ExecStart (execStart)
 import ExecExec (execExec)
-import MainMenu(mainMenu)
+import MainMenu(mainMenu, testMainMenu)
 import Backend
 import Data.Text(unpack)
 
